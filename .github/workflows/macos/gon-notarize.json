@@ -1,0 +1,13 @@
+{
+  "notarize": [
+    {
+      "path": "@env:NOTARIZE_PATH",
+      "bundle_id": "@env:BUNDLE_ID",
+      "staple": true
+    }
+  ],
+  "apple_id": {
+    "username": "infrastructure@cip4.org",
+    "password": "@env:APPLE_PASSWORD"
+  }
+}
