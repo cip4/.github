@@ -36,6 +36,9 @@ jobs:
   extract-info:
     runs-on: ubuntu-latest
     steps:
+      - name: Check out sources...
+        uses: actions/checkout@v2
+
       - name: Retrieve Project Name
         id: retrieveProject
         run: |
@@ -139,7 +142,7 @@ jobs:
           path: build/jpackage/${{ env.PROJECT }}-*.dmg
 
   windows-build:
-    needs: 
+    needs:
       - extract-info
     runs-on: windows-latest
     env:
