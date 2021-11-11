@@ -1,5 +1,7 @@
 name: Tool Snapshot
-
+defaults:
+  run:
+    shell: bash
 on:
   workflow_call:
     inputs:
