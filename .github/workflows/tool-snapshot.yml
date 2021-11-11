@@ -150,7 +150,7 @@ jobs:
           BUNDLE_ID: ${{ inputs.apple-bundle-id }}
         run: |
           mv ./build/jpackage/${{ env.PROJECT_ESCAPED }}-*.dmg "${{ env.NOTARIZE_PATH }}"
-          gon .github/workflows/macos/gon-notarize.json
+          gon --log-level=info .github/workflows/macos/gon-notarize.json
           mv "${{ env.NOTARIZE_PATH }}" "build/jpackage/${{ env.PROJECT }}-SNAPSHOT-${{ github.run_number }}.dmg"
 
       - name: Upload Binaries
