@@ -3,10 +3,6 @@ name: Tool Snapshot
 on:
   workflow_call:
     inputs:
-      tool:
-        description: Name of the tool to build. This should be identical to `rootProject.name` in `settings.gralde`.
-        required: true
-        type: string
       confluence-label:
         description: Label to attach to the binaries uplaoded to confluence.
         required: true
@@ -32,8 +28,23 @@ on:
         required: true
 
 jobs:
-  linux-build:
+  extract-info:
     runs-on: ubuntu-latest
+    steps:
+      - name: Retrieve Project Name
+        id: retrieveProject
+        run: |
+          PROJECT=$(cat settings.gradle | grep -o -P "(?<=rootProject.name = ').*(?=')")
+          echo "::set-output name=PROJECT::$PROJECT"
+    outputs:
+      PROJECT: ${{ steps.retrieveProject.outputs.PROJECT }}
+
+  linux-build:
+    needs:
+      - extract-info
+    runs-on: ubuntu-latest
+    env:
+      PROJECT: ${{ needs.extract-info.outputs.PROJECT }}
     steps:
       - name: Setup JDK 15
         uses: actions/setup-java@v2
@@ -48,19 +59,23 @@ jobs:
         run: ./gradlew test shadowDistZip shadowDistTar
 
       - name: Rename .ZIP
-        run: mv build/distributions/${{ inputs.tool }}-*.zip build/distributions/${{ inputs.tool }}-SNAPSHOT-${{ github.run_number }}.zip
+        run: mv "build/distributions/${{ env.PROJECT }}-*.zip" "build/distributions/${{ env.PROJECT }}-SNAPSHOT-${{ github.run_number }}.zip"
 
       - name: Rename .TAR
-        run: mv build/distributions/${{ inputs.tool }}-*.tar build/distributions/${{ inputs.tool }}-SNAPSHOT-${{ github.run_number }}.tar
+        run: mv "build/distributions/${{ env.PROJECT }}-*.tar" "build/distributions/${{ env.PROJECT }}-SNAPSHOT-${{ github.run_number }}.tar"
 
       - name: Upload Binaries
         uses: actions/upload-artifact@v2
         with:
           name: binaries
-          path: build/distributions/${{ inputs.tool }}-*.*
+          path: build/distributions/${{ env.PROJECT }}-*.*
 
   macos-build:
+    needs:
+      - extract-info
     runs-on: macos-latest
+    env:
+      PROJECT: ${{ needs.extract-info.outputs.PROJECT }}
     steps:
       - name: Setup JDK 15
         uses: actions/setup-java@v2
@@ -105,21 +120,25 @@ jobs:
       - name: ✏️Notarize
         env:
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD}}
-          NOTARIZE_PATH: ./build/jpackage/${{ inputs.tool }}.dmg
+          NOTARIZE_PATH: ./build/jpackage/${{ env.PROJECT }}.dmg
           BUNDLE_ID: ${{ inputs.apple-bundle-id }}
         run: |
-          mv ./build/jpackage/${{ inputs.tool }}-*.dmg ${{ env.NOTARIZE_PATH }}
+          mv "./build/jpackage/${{ env.PROJECT }}-*.dmg" "${{ env.NOTARIZE_PATH }}"
           gon .github/workflows/macos/gon-notarize.json
-          mv ${{ env.NOTARIZE_PATH }} build/jpackage/${{ inputs.tool }}-SNAPSHOT-${{ github.run_number }}.dmg
+          mv "${{ env.NOTARIZE_PATH }}" "build/jpackage/${{ env.PROJECT }}-SNAPSHOT-${{ github.run_number }}.dmg"
 
       - name: Upload Binaries
         uses: actions/upload-artifact@v2
         with:
           name: binaries
-          path: build/jpackage/${{ inputs.tool }}-*.dmg
+          path: build/jpackage/${{ env.PROJECT }}-*.dmg
 
   windows-build:
+    needs: 
+      - extract-info
     runs-on: windows-latest
+    env:
+      PROJECT: ${{ needs.extract-info.outputs.PROJECT }}
     steps:
       - name: Setup JDK 15
         uses: actions/setup-java@v2
@@ -135,20 +154,23 @@ jobs:
         run: ./gradlew test jpackage
 
       - name: Rename binaries
-        run: mv build/jpackage/${{ inputs.tool }}*.msi build/jpackage/${{ inputs.tool }}-SNAPSHOT-${{ github.run_number }}.msi
+        run: mv "build/jpackage/${{ env.PROJECT }}*.msi" "build/jpackage/${{ env.PROJECT }}-SNAPSHOT-${{ github.run_number }}.msi"
 
       - name: Upload Binaries
         uses: actions/upload-artifact@v2
         with:
           name: binaries
-          path: build/jpackage/${{ inputs.tool }}-*.msi
+          path: build/jpackage/${{ env.PROJECT }}-*.msi
 
   publish:
     needs:
+      - extract-info
       - linux-build
       - macos-build
       - windows-build
     runs-on: ubuntu-latest
+    env:
+      PROJECT: ${{ needs.extract-info.outputs.PROJECT }}
     steps:
       - name: Download all workflow run artifacts
         uses: actions/download-artifact@v2
@@ -166,4 +188,4 @@ jobs:
           password: ${{ secrets.ATLASSIAN_TOKEN }}
           contentId: ${{ inputs.confluence-content-id }}
           label: '${{ inputs.confluence-label }}-snapshot,snapshot'
-          filePattern: 'binaries/**/${{ inputs.tool }}-*.*'
+          filePattern: 'binaries/**/${{ env.PROJECT }}-*.*'
