@@ -149,8 +149,22 @@ jobs:
           NOTARIZE_PATH: ./build/jpackage/${{ env.PROJECT }}.dmg
           BUNDLE_ID: ${{ inputs.apple-bundle-id }}
         run: |
+          echo '
+          {
+            "notarize": [
+              {
+                "path": "${{ env.NOTARIZE_PATH }}",
+                "bundle_id": "${{ env.BUNDLE_ID }}",
+                "staple": true
+              }
+            ],
+            "apple_id": {
+              "username": "infrastructure@cip4.org",
+              "password": "@env:APPLE_PASSWORD"
+            }
+          }' > gon-notarize.json
           mv ./build/jpackage/${{ env.PROJECT_ESCAPED }}-*.dmg "${{ env.NOTARIZE_PATH }}"
-          gon --log-level=info .github/workflows/macos/gon-notarize.json
+          gon --log-level=info gon-notarize.json
           mv "${{ env.NOTARIZE_PATH }}" "build/jpackage/${{ env.PROJECT }}-SNAPSHOT-${{ github.run_number }}.dmg"
 
       - name: Upload Binaries
