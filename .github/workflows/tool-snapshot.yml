@@ -22,6 +22,11 @@ on:
         required: false
         type: number
         default: 15
+      working-directory:
+        description: Working directory for the workflow
+        required: false
+        type: string
+        default: ./
     secrets:
       APPLE_PASSWORD:
         required: true
@@ -43,6 +48,7 @@ jobs:
 
       - name: Retrieve Project Name
         id: retrieveProject
+        working-directory: ${{ inputs.working-directory }}
         run: |
           PROJECT=$(cat settings.gradle | grep -o -P "(?<=rootProject.name = ').*(?=')")
           PROJECT_ESCAPED=$(printf %q "$PROJECT")
@@ -70,19 +76,22 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Build with Gradle
+        working-directory: ${{ inputs.working-directory }}
         run: ./gradlew test shadowDistZip shadowDistTar
 
       - name: Rename .ZIP
+        working-directory: ${{ inputs.working-directory }}
         run: mv build/distributions/${{ env.PROJECT_ESCAPED }}-*.zip "build/distributions/${{ env.PROJECT }}-SNAPSHOT-${{ github.run_number }}.zip"
 
       - name: Rename .TAR
+        working-directory: ${{ inputs.working-directory }}
         run: mv build/distributions/${{ env.PROJECT_ESCAPED }}-*.tar "build/distributions/${{ env.PROJECT }}-SNAPSHOT-${{ github.run_number }}.tar"
 
       - name: Upload Binaries
         uses: actions/upload-artifact@v2
         with:
           name: binaries
-          path: build/distributions/${{ env.PROJECT }}-*.*
+          path: ${{ inputs.working-directory }}/build/distributions/${{ env.PROJECT }}-*.*
 
   macos-build:
     needs:
@@ -130,9 +139,11 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Build with Gradle
+        working-directory: ${{ inputs.working-directory }}
         run: ./gradlew test jpackage
 
       - name: ✏️Notarize
+        working-directory: ${{ inputs.working-directory }}
         env:
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD}}
           NOTARIZE_PATH: ./build/jpackage/${{ env.PROJECT }}.dmg
@@ -146,7 +157,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: binaries
-          path: build/jpackage/${{ env.PROJECT }}-*.dmg
+          path: ${{ inputs.working-directory }}/build/jpackage/${{ env.PROJECT }}-*.dmg
 
   windows-build:
     needs:
@@ -167,16 +178,18 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Build with Gradle
+        working-directory: ${{ inputs.working-directory }}
         run: ./gradlew test jpackage
 
       - name: Rename binaries
+        working-directory: ${{ inputs.working-directory }}
         run: mv build/jpackage/${{ env.PROJECT_ESCAPED }}*.msi "build/jpackage/${{ env.PROJECT }}-SNAPSHOT-${{ github.run_number }}.msi"
 
       - name: Upload Binaries
         uses: actions/upload-artifact@v2
         with:
           name: binaries
-          path: build/jpackage/${{ env.PROJECT }}-*.msi
+          path: ${{ inputs.working-directory }}/build/jpackage/${{ env.PROJECT }}-*.msi
 
   publish:
     needs:

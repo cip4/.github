@@ -12,6 +12,7 @@ jobs:
       confluence-label: workflow-test
       confluence-content-id: 2199814152
       apple-bundle-id: org.cip4.workflow-test
+      working-directory: ./.github/workflows/test
     secrets:
       APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
       APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
