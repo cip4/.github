@@ -15,6 +15,11 @@ on:
         description: BundleID to use when notarizing the MacOS build.
         required: true
         type: string
+      java-version:
+        description: Java version to use for building.
+        required: false
+        type: number
+        default: 15
     secrets:
       APPLE_PASSWORD:
         required: true
@@ -46,11 +51,11 @@ jobs:
     env:
       PROJECT: ${{ needs.extract-info.outputs.PROJECT }}
     steps:
-      - name: Setup JDK 15
+      - name: Setup JDK ${{ inputs.java-version }}
         uses: actions/setup-java@v2
         with:
           distribution: 'adopt'
-          java-version: 15
+          java-version: ${{ inputs.java-version }}
 
       - name: Check out sources...
         uses: actions/checkout@v2
@@ -77,11 +82,11 @@ jobs:
     env:
       PROJECT: ${{ needs.extract-info.outputs.PROJECT }}
     steps:
-      - name: Setup JDK 15
+      - name: Setup JDK ${{ inputs.java-version }}
         uses: actions/setup-java@v2
         with:
           distribution: 'adopt'
-          java-version: 15
+          java-version: ${{ inputs.java-version }}
           check-latest: true
 
       - name: Setup Tooling
@@ -140,11 +145,11 @@ jobs:
     env:
       PROJECT: ${{ needs.extract-info.outputs.PROJECT }}
     steps:
-      - name: Setup JDK 15
+      - name: Setup JDK ${{ inputs.java-version }}
         uses: actions/setup-java@v2
         with:
           distribution: 'adopt'
-          java-version: 15
+          java-version: ${{ inputs.java-version }}
           check-latest: true
 
       - name: Check out sources...
