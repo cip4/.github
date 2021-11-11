@@ -3,10 +3,6 @@ name: Tool Release
 on:
   workflow_call:
     inputs:
-      tool:
-        description: Name of the tool to build. This should be identical to `rootProject.name` in `settings.gralde`.
-        required: true
-        type: string
       confluence-label:
         description: Label to attach to the binaries uplaoded to confluence.
         required: true
@@ -35,8 +31,30 @@ defaults:
   run:
     shell: bash
 jobs:
+  extract-info:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out sources...
+        uses: actions/checkout@v2
+
+      - name: Retrieve Project Name
+        id: retrieveProject
+        run: |
+          PROJECT=$(cat settings.gradle | grep -o -P "(?<=rootProject.name = ').*(?=')")
+          PROJECT_ESCAPED=$(printf %q "$PROJECT")
+          echo "::set-output name=PROJECT::$PROJECT"
+          echo "::set-output name=PROJECT_ESCAPED::$PROJECT_ESCAPED"
+    outputs:
+      PROJECT: ${{ steps.retrieveProject.outputs.PROJECT }}
+      PROJECT_ESCAPED: ${{ steps.retrieveProject.outputs.PROJECT_ESCAPED }}
+
   linux-build:
     runs-on: ubuntu-latest
+    needs:
+      - extract-info
+    env:
+      PROJECT: ${{ needs.extract-info.outputs.PROJECT }}
+      PROJECT_ESCAPED: ${{ needs.extract-info.outputs.PROJECT_ESCAPED }}
     steps:
       - name: Setup JDK 15
         uses: actions/setup-java@v2
@@ -51,28 +69,33 @@ jobs:
         run: ./gradlew shadowDistZip shadowDistTar -PprojectVersion="${GITHUB_REF/refs\/tags\//}"
 
       - name: Rename .ZIP
-        run: mv build/distributions/${{ inputs.tool }}-*.zip build/distributions/${{ inputs.tool }}-${GITHUB_REF/refs\/tags\//}.zip
+        run: mv build/distributions/${{ env.PROJECT_ESCAPED }}-*.zip "build/distributions/${{ env.PROJECT }}-${GITHUB_REF/refs\/tags\//}.zip"
 
       - name: Rename .TAR
-        run: mv build/distributions/${{ inputs.tool }}-*.tar build/distributions/${{ inputs.tool }}-${GITHUB_REF/refs\/tags\//}.tar
+        run: mv build/distributions/${{ env.PROJECT_ESCAPED }}-*.tar "build/distributions/${{ env.PROJECT }}-${GITHUB_REF/refs\/tags\//}.tar"
 
       - name: Upload Binaries
         uses: actions/upload-artifact@v2
         with:
           name: binaries
-          path: build/distributions/${{ inputs.tool }}-*.*
+          path: build/distributions/${{ env.PROJECT }}-*.*
 
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@v1-release
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: build/distributions/${{ inputs.tool }}-*.*
+          file: build/distributions/${{ env.PROJECT }}-*.*
           tag: ${{ github.ref }}
           overwrite: true
           file_glob: true
 
   macos-build:
     runs-on: macos-latest
+    needs:
+      - extract-info
+    env:
+      PROJECT: ${{ needs.extract-info.outputs.PROJECT }}
+      PROJECT_ESCAPED: ${{ needs.extract-info.outputs.PROJECT_ESCAPED }}
     steps:
       - name: Setup JDK 15
         uses: actions/setup-java@v2
@@ -117,30 +140,49 @@ jobs:
       - name: ✏️Notarize
         env:
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD}}
-          NOTARIZE_PATH: ./build/jpackage/${{ inputs.tool }}.dmg
+          NOTARIZE_PATH: ./build/jpackage/${{ env.PROJECT }}.dmg
           BUNDLE_ID: ${{ inputs.apple-bundle-id }}
         run: |
-          mv ./build/jpackage/${{ inputs.tool }}-*.dmg ${{ env.NOTARIZE_PATH }}
-          gon .github/workflows/macos/gon-notarize.json
-          mv ${{ env.NOTARIZE_PATH }} build/jpackage/${{ inputs.tool }}-${GITHUB_REF/refs\/tags\//}.dmg
+          echo '
+          {
+            "notarize": [
+              {
+                "path": "${{ env.NOTARIZE_PATH }}",
+                "bundle_id": "${{ env.BUNDLE_ID }}",
+                "staple": true
+              }
+            ],
+            "apple_id": {
+              "username": "infrastructure@cip4.org",
+              "password": "@env:APPLE_PASSWORD"
+            }
+          }' > gon-notarize.json
+          mv ./build/jpackage/${{ env.PROJECT_ESCAPED }}-*.dmg "${{ env.NOTARIZE_PATH }}"
+          gon gon-notarize.json
+          mv "${{ env.NOTARIZE_PATH }}" "build/jpackage/${{ env.PROJECT }}-${GITHUB_REF/refs\/tags\//}.dmg"
 
       - name: Upload Binaries
         uses: actions/upload-artifact@v2
         with:
           name: binaries
-          path: build/jpackage/${{ inputs.tool }}-*.dmg
+          path: build/jpackage/${{ env.PROJECT }}-*.dmg
 
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@v1-release
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: build/jpackage/${{ inputs.tool }}-*.dmg
+          file: build/jpackage/${{ env.PROJECT }}-*.dmg
           tag: ${{ github.ref }}
           overwrite: true
           file_glob: true
 
   windows-build:
     runs-on: windows-latest
+    needs:
+      - extract-info
+    env:
+      PROJECT: ${{ needs.extract-info.outputs.PROJECT }}
+      PROJECT_ESCAPED: ${{ needs.extract-info.outputs.PROJECT_ESCAPED }}
     steps:
       - name: Setup JDK 15
         uses: actions/setup-java@v2
@@ -159,23 +201,26 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: binaries
-          path: build/jpackage/${{ inputs.tool }}-*.msi
+          path: build/jpackage/${{ env.PROJECT }}-*.msi
 
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@v1-release
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: build/jpackage/${{ inputs.tool }}-*.msi
+          file: build/jpackage/${{ env.PROJECT }}-*.msi
           tag: ${{ github.ref }}
           overwrite: true
           file_glob: true
 
   publish:
+    runs-on: ubuntu-latest
     needs:
       - linux-build
       - macos-build
       - windows-build
-    runs-on: ubuntu-latest
+      - extract-info
+    env:
+      PROJECT: ${{ needs.extract-info.outputs.PROJECT }}
     steps:
       - name: Download all workflow run artifacts
         uses: actions/download-artifact@v2
@@ -193,4 +238,4 @@ jobs:
           password: ${{ secrets.ATLASSIAN_TOKEN }}
           contentId: ${{ inputs.confluence-content-id }}
           label: '${{ inputs.confluence-label }}-release,release'
-          filePattern: 'binaries/**/${{ inputs.tool }}-*.*'
+          filePattern: 'binaries/**/${{ env.PROJECT }}-*.*'
