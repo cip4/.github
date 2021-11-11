@@ -5,7 +5,7 @@ on:
 jobs:
   call-tool-snapshot:
     name: 🏭
-    uses: cip4/.github/.github/workflows/tool-snapshot.yml@${{ github.sha }}
+    uses: .github/workflows/tool-snapshot.yml
     with:
       java-version: 16
       confluence-label: workflow-test
