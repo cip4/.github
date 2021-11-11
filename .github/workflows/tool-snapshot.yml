@@ -43,9 +43,12 @@ jobs:
         id: retrieveProject
         run: |
           PROJECT=$(cat settings.gradle | grep -o -P "(?<=rootProject.name = ').*(?=')")
+          PROJECT_ESCAPED=$(printf %q "$PROJECT")
           echo "::set-output name=PROJECT::$PROJECT"
+          echo "::set-output name=PROJECT_ESCAPED::$PROJECT_ESCAPED"
     outputs:
       PROJECT: ${{ steps.retrieveProject.outputs.PROJECT }}
+      PROJECT_ESCAPED: ${{ steps.retrieveProject.outputs.PROJECT_ESCAPED }}
 
   linux-build:
     needs:
@@ -53,6 +56,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       PROJECT: ${{ needs.extract-info.outputs.PROJECT }}
+      PROJECT_ESCAPED: ${{ needs.extract-info.outputs.PROJECT_ESCAPED }}
     steps:
       - name: Setup JDK ${{ inputs.java-version }}
         uses: actions/setup-java@v2
@@ -67,10 +71,10 @@ jobs:
         run: ./gradlew test shadowDistZip shadowDistTar
 
       - name: Rename .ZIP
-        run: mv "build/distributions/${{ env.PROJECT }}-*.zip" "build/distributions/${{ env.PROJECT }}-SNAPSHOT-${{ github.run_number }}.zip"
+        run: mv build/distributions/${{ env.PROJECT_ESCAPED }}-*.zip "build/distributions/${{ env.PROJECT }}-SNAPSHOT-${{ github.run_number }}.zip"
 
       - name: Rename .TAR
-        run: mv "build/distributions/${{ env.PROJECT }}-*.tar" "build/distributions/${{ env.PROJECT }}-SNAPSHOT-${{ github.run_number }}.tar"
+        run: mv build/distributions/${{ env.PROJECT_ESCAPED }}-*.tar "build/distributions/${{ env.PROJECT }}-SNAPSHOT-${{ github.run_number }}.tar"
 
       - name: Upload Binaries
         uses: actions/upload-artifact@v2
@@ -84,6 +88,7 @@ jobs:
     runs-on: macos-latest
     env:
       PROJECT: ${{ needs.extract-info.outputs.PROJECT }}
+      PROJECT_ESCAPED: ${{ needs.extract-info.outputs.PROJECT_ESCAPED }}
     steps:
       - name: Setup JDK ${{ inputs.java-version }}
         uses: actions/setup-java@v2
@@ -131,7 +136,7 @@ jobs:
           NOTARIZE_PATH: ./build/jpackage/${{ env.PROJECT }}.dmg
           BUNDLE_ID: ${{ inputs.apple-bundle-id }}
         run: |
-          mv "./build/jpackage/${{ env.PROJECT }}-*.dmg" "${{ env.NOTARIZE_PATH }}"
+          mv ./build/jpackage/${{ env.PROJECT_ESCAPED }}-*.dmg "${{ env.NOTARIZE_PATH }}"
           gon .github/workflows/macos/gon-notarize.json
           mv "${{ env.NOTARIZE_PATH }}" "build/jpackage/${{ env.PROJECT }}-SNAPSHOT-${{ github.run_number }}.dmg"
 
@@ -147,6 +152,7 @@ jobs:
     runs-on: windows-latest
     env:
       PROJECT: ${{ needs.extract-info.outputs.PROJECT }}
+      PROJECT_ESCAPED: ${{ needs.extract-info.outputs.PROJECT_ESCAPED }}
     steps:
       - name: Setup JDK ${{ inputs.java-version }}
         uses: actions/setup-java@v2
@@ -162,7 +168,7 @@ jobs:
         run: ./gradlew test jpackage
 
       - name: Rename binaries
-        run: mv "build/jpackage/${{ env.PROJECT }}*.msi" "build/jpackage/${{ env.PROJECT }}-SNAPSHOT-${{ github.run_number }}.msi"
+        run: mv build/jpackage/${{ env.PROJECT_ESCAPED }}*.msi "build/jpackage/${{ env.PROJECT }}-SNAPSHOT-${{ github.run_number }}.msi"
 
       - name: Upload Binaries
         uses: actions/upload-artifact@v2
