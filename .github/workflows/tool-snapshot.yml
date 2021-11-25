@@ -27,6 +27,11 @@ on:
         required: false
         type: string
         default: ./
+      docker-build:
+        description: Flag if docker image should be build and published
+        required: false
+        type: boolean
+        default: false
     secrets:
       APPLE_PASSWORD:
         required: true
@@ -38,6 +43,14 @@ on:
         required: true
       ATLASSIAN_TOKEN:
         required: true
+      GCP_SA_KEY:
+        required: false
+      GCP_PROJECT_ID:
+        required: false
+      DOCKER_HUB_USERNAME:
+        required: false
+      DOCKER_HUB_PASSWORD:
+        required: false
 
 jobs:
   extract-info:
@@ -52,11 +65,14 @@ jobs:
         run: |
           PROJECT=$(cat settings.gradle | grep -o -P "(?<=rootProject.name = ').*(?=')")
           PROJECT_ESCAPED=$(printf %q "$PROJECT")
+          PROJECT_HANDLE=$(echo "$PROJECT" | sed "s/CIP4 //" | tr '[:upper:]' '[:lower:]')
           echo "::set-output name=PROJECT::$PROJECT"
           echo "::set-output name=PROJECT_ESCAPED::$PROJECT_ESCAPED"
+          echo "::set-output name=PROJECT_HANDLE::$PROJECT_HANDLE"
     outputs:
       PROJECT: ${{ steps.retrieveProject.outputs.PROJECT }}
       PROJECT_ESCAPED: ${{ steps.retrieveProject.outputs.PROJECT_ESCAPED }}
+      PROJECT_HANDLE: ${{ steps.retrieveProject.outputs.PROJECT_HANDLE }}
 
   linux-build:
     needs:
@@ -204,6 +220,64 @@ jobs:
         with:
           name: binaries
           path: ${{ inputs.working-directory }}/build/jpackage/${{ env.PROJECT }}-*.msi
+
+  docker-build:
+    runs-on: ubuntu-latest
+    if: ${{ inputs.docker-build }}
+    needs:
+      - extract-info
+    env:
+      PROJECT: ${{ needs.extract-info.outputs.PROJECT }}
+      PROJECT_HANDLE: ${{ needs.extract-info.outputs.PROJECT_HANDLE }}
+      SERVICE_NAME: ${{ needs.extract-info.outputs.PROJECT_HANDLE }}-cip4-org
+      RUN_REGION: europe-west1
+    steps:
+      - name: Setup GCloud CLI
+        uses: google-github-actions/setup-gcloud@master
+        with:
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          export_default_credentials: true
+
+      - name: Check out sources...
+        uses: actions/checkout@v2
+
+      - name: Build docker container
+        run: |-
+          docker build \
+            -t cip4/${PROJECT_HANDLE}:latest \
+            -t "gcr.io/${{ secrets.GCP_PROJECT_ID }}/${SERVICE_NAME}:latest" \
+            --build-arg VERSION=dev \
+            --build-arg BUILD_NUMBER=${GITHUB_RUN_NUMBER} \
+            --build-arg GIT_REV=${GITHUB_SHA} \
+            .
+
+      - name: Login to Docker Hub
+        run: docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} -p ${{ secrets.DOCKER_HUB_PASSWORD }}
+
+      - name: Push README to Docker Hub
+        uses: peter-evans/dockerhub-description@v2
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+          repository: cip4/${{ env.PROJECT_HANDLE }}
+
+      - name: Push docker container to Docker Hub
+        run: docker push cip4/${{ env.PROJECT_HANDLE }}:latest
+
+      - name: Docker Auth GCloud
+        run: gcloud auth configure-docker
+
+      - name: Push Image to Google Container Registry
+        run: docker push "gcr.io/${{ secrets.PROJECT_ID }}/${SERVICE_NAME}:latest"
+
+      - name: Deploy to Cloud Run
+        run: |-
+          gcloud run deploy "${SERVICE_NAME}" \
+            --region "${RUN_REGION}" \
+            --image "gcr.io/${{ secrets.PROJECT_ID }}/${SERVICE_NAME}:latest" \
+            --platform "managed" \
+            --allow-unauthenticated
 
   publish:
     needs:
