@@ -42,11 +42,11 @@ on:
       ATLASSIAN_TOKEN:
         required: true
       CODE_SIGN_CERTIFICATE:
-        required: false
+        required: true
       CODE_SIGN_PASSWORD:
-        required: false
+        required: true
       CODE_SIGN_SHA1:
-        required: false
+        required: true
       GCP_SA_KEY:
         required: false
       GCP_PROJECT_ID:
@@ -227,6 +227,7 @@ jobs:
           BUILD_CERTIFICATE: ${{ secrets.CODE_SIGN_CERTIFICATE }}
           BUILD_CERTIFICATE_PASSWORD: ${{ secrets.CODE_SIGN_PASSWORD }}
           CERTIFICATE_SHA1: ${{ secrets.CODE_SIGN_SHA1 }}
+        shell: pwsh
         run: |
           New-Item -ItemType directory -Path certificate
           $env:BUILD_CERTIFICATE | Out-File certificate\certificate.pem
