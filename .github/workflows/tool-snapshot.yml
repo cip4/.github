@@ -223,10 +223,6 @@ jobs:
         run: mv build/jpackage/${{ env.PROJECT_ESCAPED }}*.msi "build/jpackage/${{ env.PROJECT }}-SNAPSHOT-${{ github.run_number }}.msi"
 
       - name: Sign MSI
-        if: |
-          ${{ secrets.CODE_SIGN_CERTIFICATE }} &&
-          ${{ secrets.CODE_SIGN_PASSWORD }} &&
-          ${{ secrets.CODE_SIGN_SHA1 }}
         env:
           BUILD_CERTIFICATE: ${{ secrets.CODE_SIGN_CERTIFICATE }}
           BUILD_CERTIFICATE_PASSWORD: ${{ secrets.CODE_SIGN_PASSWORD }}
