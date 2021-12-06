@@ -92,8 +92,9 @@ jobs:
       - name: Setup JDK ${{ inputs.java-version }}
         uses: actions/setup-java@v2
         with:
-          distribution: 'adopt'
+          distribution: 'temurin'
           java-version: ${{ inputs.java-version }}
+          cache: 'gradle'
 
       - name: Check out sources...
         uses: actions/checkout@v2
@@ -127,9 +128,9 @@ jobs:
       - name: Setup JDK ${{ inputs.java-version }}
         uses: actions/setup-java@v2
         with:
-          distribution: 'adopt'
+          distribution: 'temurin'
           java-version: ${{ inputs.java-version }}
-          check-latest: true
+          cache: 'gradle'
 
       - name: Setup Tooling
         run: |
@@ -207,9 +208,9 @@ jobs:
       - name: Setup JDK ${{ inputs.java-version }}
         uses: actions/setup-java@v2
         with:
-          distribution: 'adopt'
+          distribution: 'temurin'
           java-version: ${{ inputs.java-version }}
-          check-latest: true
+          cache: 'gradle'
 
       - name: Check out sources...
         uses: actions/checkout@v2
