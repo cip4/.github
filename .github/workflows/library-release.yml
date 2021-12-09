@@ -1,8 +1,8 @@
-name: Library Snapshot
+name: Library Release
 
-# This build process is triggered in case changes are being pushed to the master branch.
-# This process takes the latest master changes, build and test the new version and finally publish the artifacts
-# to the Central Maven SNAPSHOT Repository.
+# This build process is triggered in case a new annotated tag has been created, which name starts with "JDFLibJ-2.1.".
+# This process takes the latest master changes, build and test the new version and finally releases the artifacts
+# on the Central Maven Repository as well as on projects Release page on github.
 
 on:
   workflow_call:
@@ -25,28 +25,8 @@ on:
         required: true
 
 jobs:
-  extract-info:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out sources...
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-
-      - name: Retrieve Project Data
-        id: extract-info
-        run: |
-          VERSION=$( git describe --tags --abbrev=0 | sed  "s/^v\?\(.*\)\.[[:digit:]]\+$/\\1.x-SNAPSHOT/")
-          echo "::set-output name=VERSION::$VERSION"
-    outputs:
-      VERSION: ${{ steps.extract-info.outputs.VERSION }}
-
   linux-build-publish:
     runs-on: ubuntu-latest
-    needs:
-      - extract-info
-    env:
-      VERSION: ${{ needs.extract-info.outputs.VERSION }}
     steps:
       - name: Check out sources...
         uses: actions/checkout@v2
@@ -59,7 +39,16 @@ jobs:
           cache: 'gradle'
 
       - name: Build with Gradle
-        run: ./gradlew build -PprojectVersion=${{ env.VERSION }}
+        run: ./gradlew build -PprojectVersion=${GITHUB_REF##*/}
+
+      - name: Attach files to GitHub Release
+        uses: svenstaro/upload-release-action@v1-release
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: build/libs/*
+          tag: ${{ github.ref }}
+          overwrite: true
+          file_glob: true
 
       - name: Upload Artifacts to GitHub Build Artifacts
         uses: actions/upload-artifact@v1
@@ -74,7 +63,7 @@ jobs:
           name: test-results linux
           path: build/reports/tests/test
 
-      - name: Publish artifacts to Maven Central Snapshot
+      - name: Publish artifacts to Maven Central Repository
         env:
           SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
           SIGNING_KEY_ID: ${{ secrets.SIGNING_KEY_ID }}
@@ -83,13 +72,13 @@ jobs:
           OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
         run: |
           echo $SIGNING_KEY > $PWD/secring.gpg
-          ./gradlew publish \
+          ./gradlew publish closeAndReleaseRepository \
               -Psigning.keyId=$SIGNING_KEY_ID \
               -Psigning.password=$SIGNING_PASSWORD \
               -Psigning.secretKeyRingFile=$PWD/secring.gpg \
               -PossrhUsername=$OSSRH_USERNAME \
               -PossrhPassword=$OSSRH_PASSWORD \
-              -PprojectVersion=${{ env.VERSION }}
+              -PprojectVersion=${GITHUB_REF##*/}
 
   windows-test:
     runs-on: windows-latest
