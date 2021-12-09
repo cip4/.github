@@ -28,7 +28,7 @@ jobs:
           cache: 'gradle'
 
       - name: Test with Gradle
-        run: ./gradlew test
+        run: ./gradlew test --no-daemon
 
       - name: Upload Test Results to GitHub Build Artifacts
         if: ${{ always() }}
