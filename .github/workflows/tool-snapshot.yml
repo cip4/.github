@@ -89,6 +89,9 @@ jobs:
       PROJECT: ${{ needs.extract-info.outputs.PROJECT }}
       PROJECT_ESCAPED: ${{ needs.extract-info.outputs.PROJECT_ESCAPED }}
     steps:
+      - name: Check out sources...
+        uses: actions/checkout@v2
+
       - name: Setup JDK ${{ inputs.java-version }}
         uses: actions/setup-java@v2
         with:
@@ -96,12 +99,9 @@ jobs:
           java-version: ${{ inputs.java-version }}
           cache: 'gradle'
 
-      - name: Check out sources...
-        uses: actions/checkout@v2
-
       - name: Build with Gradle
         working-directory: ${{ inputs.working-directory }}
-        run: ./gradlew test shadowDistZip shadowDistTar
+        run: ./gradlew test shadowDistZip shadowDistTar --no-daemon
 
       - name: Rename .ZIP
         working-directory: ${{ inputs.working-directory }}
@@ -125,6 +125,9 @@ jobs:
       PROJECT: ${{ needs.extract-info.outputs.PROJECT }}
       PROJECT_ESCAPED: ${{ needs.extract-info.outputs.PROJECT_ESCAPED }}
     steps:
+      - name: Check out sources...
+        uses: actions/checkout@v2
+
       - name: Setup JDK ${{ inputs.java-version }}
         uses: actions/setup-java@v2
         with:
@@ -159,12 +162,9 @@ jobs:
           security import $CERTIFICATE_PATH -P $P12_PASSWORD -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
           security list-keychain -d user -s $KEYCHAIN_PATH
 
-      - name: Check out sources...
-        uses: actions/checkout@v2
-
       - name: Build with Gradle
         working-directory: ${{ inputs.working-directory }}
-        run: ./gradlew test jpackage
+        run: ./gradlew test jpackage --no-daemon
 
       - name: ✏️Notarize
         working-directory: ${{ inputs.working-directory }}
@@ -205,6 +205,9 @@ jobs:
       PROJECT: ${{ needs.extract-info.outputs.PROJECT }}
       PROJECT_ESCAPED: ${{ needs.extract-info.outputs.PROJECT_ESCAPED }}
     steps:
+      - name: Check out sources...
+        uses: actions/checkout@v2
+
       - name: Setup JDK ${{ inputs.java-version }}
         uses: actions/setup-java@v2
         with:
@@ -212,12 +215,9 @@ jobs:
           java-version: ${{ inputs.java-version }}
           cache: 'gradle'
 
-      - name: Check out sources...
-        uses: actions/checkout@v2
-
       - name: Build with Gradle
         working-directory: ${{ inputs.working-directory }}
-        run: ./gradlew test jpackage
+        run: ./gradlew test jpackage --no-daemon
 
       - name: Rename binaries
         working-directory: ${{ inputs.working-directory }}

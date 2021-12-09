@@ -79,6 +79,9 @@ jobs:
       PROJECT: ${{ needs.extract-info.outputs.PROJECT }}
       PROJECT_ESCAPED: ${{ needs.extract-info.outputs.PROJECT_ESCAPED }}
     steps:
+      - name: Check out sources...
+        uses: actions/checkout@v2
+
       - name: Setup JDK ${{ inputs.java-version }}
         uses: actions/setup-java@v2
         with:
@@ -86,11 +89,8 @@ jobs:
           java-version: ${{ inputs.java-version }}
           cache: 'gradle'
 
-      - name: Check out sources...
-        uses: actions/checkout@v2
-
       - name: Build with Gradle
-        run: ./gradlew test shadowDistZip shadowDistTar -PprojectVersion="${GITHUB_REF/refs\/tags\//}"
+        run: ./gradlew test shadowDistZip shadowDistTar -PprojectVersion="${GITHUB_REF/refs\/tags\//}" --no-daemon
 
       - name: Rename .ZIP
         run: mv build/distributions/${{ env.PROJECT_ESCAPED }}-*.zip "build/distributions/${{ env.PROJECT }}-${GITHUB_REF/refs\/tags\//}.zip"
@@ -121,6 +121,9 @@ jobs:
       PROJECT: ${{ needs.extract-info.outputs.PROJECT }}
       PROJECT_ESCAPED: ${{ needs.extract-info.outputs.PROJECT_ESCAPED }}
     steps:
+      - name: Check out sources...
+        uses: actions/checkout@v2
+
       - name: Setup JDK ${{ inputs.java-version }}
         uses: actions/setup-java@v2
         with:
@@ -156,11 +159,8 @@ jobs:
           security import $CERTIFICATE_PATH -P $P12_PASSWORD -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
           security list-keychain -d user -s $KEYCHAIN_PATH
 
-      - name: Check out sources...
-        uses: actions/checkout@v2
-
       - name: Build with Gradle
-        run: ./gradlew test jpackage -PprojectVersion="${GITHUB_REF/refs\/tags\//}"
+        run: ./gradlew test jpackage -PprojectVersion="${GITHUB_REF/refs\/tags\//}" --no-daemon
 
       - name: ✏️Notarize
         env:
@@ -209,6 +209,9 @@ jobs:
       PROJECT: ${{ needs.extract-info.outputs.PROJECT }}
       PROJECT_ESCAPED: ${{ needs.extract-info.outputs.PROJECT_ESCAPED }}
     steps:
+      - name: Check out sources...
+        uses: actions/checkout@v2
+
       - name: Setup JDK ${{ inputs.java-version }}
         uses: actions/setup-java@v2
         with:
@@ -217,12 +220,8 @@ jobs:
           cache: 'gradle'
           check-latest: true
 
-      - name: Check out sources...
-        uses: actions/checkout@v2
-
       - name: Build with Gradle
-        run: ./gradlew test jpackage -PprojectVersion="${GITHUB_REF/refs\/tags\//}"
-
+        run: ./gradlew test jpackage -PprojectVersion="${GITHUB_REF/refs\/tags\//}" --no-daemon
 
       - name: Sign MSI
         env:

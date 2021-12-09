@@ -39,7 +39,7 @@ jobs:
           cache: 'gradle'
 
       - name: Build with Gradle
-        run: ./gradlew build -PprojectVersion=${GITHUB_REF##*/}
+        run: ./gradlew build -PprojectVersion=${GITHUB_REF##*/} --no-daemon
 
       - name: Attach files to GitHub Release
         uses: svenstaro/upload-release-action@v1-release
@@ -78,7 +78,8 @@ jobs:
               -Psigning.secretKeyRingFile=$PWD/secring.gpg \
               -PossrhUsername=$OSSRH_USERNAME \
               -PossrhPassword=$OSSRH_PASSWORD \
-              -PprojectVersion=${GITHUB_REF##*/}
+              -PprojectVersion=${GITHUB_REF##*/} \
+              --no-daemon
 
   windows-test:
     runs-on: windows-latest
@@ -94,7 +95,7 @@ jobs:
           cache: 'gradle'
 
       - name: Test with Gradle
-        run: ./gradlew test
+        run: ./gradlew test --no-daemon
 
       - name: Upload Test Results to GitHub Build Artifacts
         if: ${{ always() }}

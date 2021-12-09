@@ -59,7 +59,7 @@ jobs:
           cache: 'gradle'
 
       - name: Build with Gradle
-        run: ./gradlew build -PprojectVersion=${{ env.VERSION }}
+        run: ./gradlew build -PprojectVersion=${{ env.VERSION }} --no-daemon
 
       - name: Upload Artifacts to GitHub Build Artifacts
         uses: actions/upload-artifact@v1
@@ -89,7 +89,8 @@ jobs:
               -Psigning.secretKeyRingFile=$PWD/secring.gpg \
               -PossrhUsername=$OSSRH_USERNAME \
               -PossrhPassword=$OSSRH_PASSWORD \
-              -PprojectVersion=${{ env.VERSION }}
+              -PprojectVersion=${{ env.VERSION }} \
+              --no-daemon
 
   windows-test:
     runs-on: windows-latest
@@ -105,7 +106,7 @@ jobs:
           cache: 'gradle'
 
       - name: Test with Gradle
-        run: ./gradlew test
+        run: ./gradlew test --no-daemon
 
       - name: Upload Test Results to GitHub Build Artifacts
         if: ${{ always() }}
