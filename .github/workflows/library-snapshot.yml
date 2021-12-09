@@ -1,0 +1,112 @@
+name: Library Snapshot
+
+# This build process is triggered in case changes are being pushed to the master branch.
+# This process takes the latest master changes, build and test the new version and finally publish the artifacts
+# to the Central Maven SNAPSHOT Repository.
+
+on:
+  workflow_call:
+    inputs:
+      java-version:
+        description: Java version to use for building.
+        required: false
+        type: number
+        default: 11
+    secrets:
+      SIGNING_KEY:
+        required: true
+      SIGNING_KEY_ID:
+        required: true
+      SIGNING_PASSWORD:
+        required: true
+      OSSRH_USERNAME:
+        required: true
+      OSSRH_PASSWORD:
+        required: true
+
+jobs:
+  extract-info:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out sources...
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Retrieve Project Data
+        id: extract-info
+        run: |
+          VERSION=$( git describe --tags --abbrev=0 | sed  "s/^v\?\(.*\)\.[[:digit:]]\+$/\\1.x-SNAPSHOT/")
+          echo "::set-output name=VERSION::$VERSION"
+    outputs:
+      VERSION: ${{ steps.extract-info.outputs.VERSION }}
+
+  linux-build-publish:
+    runs-on: ubuntu-latest
+    needs:
+      - extract-info
+    env:
+      VERSION: ${{ needs.extract-info.outputs.VERSION }}
+    steps:
+      - name: Set up JDK ${{ inputs.java-version }}
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'temurin'
+          java-version: ${{ inputs.java-version }}
+          cache: 'gradle'
+
+      - name: Check out sources...
+        uses: actions/checkout@v2
+
+      - name: Build with Gradle
+        run: ./gradlew build -PprojectVersion=${{ env.VERSION }}
+
+      - name: Upload Artifacts to GitHub Build Artifacts
+        uses: actions/upload-artifact@v1
+        with:
+          name: libs
+          path: build/libs
+
+      - name: Upload Test Results to GitHub Build Artifacts
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v1
+        with:
+          name: test-results linux
+          path: build/reports/tests/test
+
+      - name: Publish artifacts to Maven Central Snapshot
+        env:
+          SIGNING_KEY_ID: ${{ secrets.SIGNING_KEY_ID }}
+          SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
+          OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+          OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
+        run: |
+          echo ${{ secrets.SIGNING_KEY }} > $PWD/secring.gpg
+          ./gradlew publish -Psigning.keyId=$SIGNING_KEY_ID \
+                            -Psigning.password=$SIGNING_PASSWORD \
+                            -Psigning.secretKeyRingFile=$PWD/secring.gpg \
+                            -PossrhUsername=$OSSRH_USERNAME \
+                            -PossrhPassword=$OSSRH_PASSWORD
+
+  windows-test:
+    runs-on: windows-latest
+    steps:
+      - name: Set up JDK ${{ inputs.java-version }}
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'temurin'
+          java-version: ${{ inputs.java-version }}
+          cache: 'gradle'
+
+      - name: Check out sources...
+        uses: actions/checkout@v2
+
+      - name: Test with Gradle
+        run: ./gradlew test
+
+      - name: Upload Test Results to GitHub Build Artifacts
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v1
+        with:
+          name: test-results windows
+          path: build/reports/tests/test
