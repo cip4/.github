@@ -76,17 +76,19 @@ jobs:
 
       - name: Publish artifacts to Maven Central Snapshot
         env:
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
           SIGNING_KEY_ID: ${{ secrets.SIGNING_KEY_ID }}
           SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
           OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
           OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
         run: |
-          echo ${{ secrets.SIGNING_KEY }} > $PWD/secring.gpg
+          echo $SIGNING_KEY > $PWD/secring.gpg
           ./gradlew publish -Psigning.keyId=$SIGNING_KEY_ID \
                             -Psigning.password=$SIGNING_PASSWORD \
                             -Psigning.secretKeyRingFile=$PWD/secring.gpg \
                             -PossrhUsername=$OSSRH_USERNAME \
-                            -PossrhPassword=$OSSRH_PASSWORD
+                            -PossrhPassword=$OSSRH_PASSWORD \
+                            -PprojectVersion=${{ env.VERSION }}
 
   windows-test:
     runs-on: windows-latest
