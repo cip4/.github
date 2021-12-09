@@ -1,0 +1,38 @@
+name: Pull-Request
+
+on:
+  workflow_call:
+    inputs:
+      java-version:
+        description: Java version to use for building.
+        required: false
+        type: number
+        default: 11
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
+    runs-on: ${{ matrix.os }}
+    name: Java build on ${{ matrix.os }} with JDK ${{ inputs.java-version }}
+    steps:
+      - name: Check out sources...
+        uses: actions/checkout@v2
+
+      - name: Set up JDK ${{ inputs.java-version }}
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'temurin'
+          java-version: ${{ inputs.java-version }}
+          cache: 'gradle'
+
+      - name: Test with Gradle
+        run: ./gradlew test
+
+      - name: Upload Test Results to GitHub Build Artifacts
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v1
+        with:
+          name: test-results/${{ matrix.os }}
+          path: build/reports/tests/test
