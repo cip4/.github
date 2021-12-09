@@ -34,5 +34,5 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v1
         with:
-          name: test-results/${{ matrix.os }}
+          name: test-results for ${{ matrix.os }}
           path: build/reports/tests/test
