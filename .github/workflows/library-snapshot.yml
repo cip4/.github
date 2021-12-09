@@ -48,15 +48,15 @@ jobs:
     env:
       VERSION: ${{ needs.extract-info.outputs.VERSION }}
     steps:
+      - name: Check out sources...
+        uses: actions/checkout@v2
+
       - name: Set up JDK ${{ inputs.java-version }}
         uses: actions/setup-java@v2
         with:
           distribution: 'temurin'
           java-version: ${{ inputs.java-version }}
           cache: 'gradle'
-
-      - name: Check out sources...
-        uses: actions/checkout@v2
 
       - name: Build with Gradle
         run: ./gradlew build -PprojectVersion=${{ env.VERSION }}
