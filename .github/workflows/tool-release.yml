@@ -20,6 +20,11 @@ on:
         required: false
         type: number
         default: 15
+      java-distribution:
+        description: Java distribution to use for building.
+        required: false
+        type: string
+        default: 'adopt'
       docker-build:
         description: Flag if docker image should be build and published
         required: false
@@ -85,7 +90,7 @@ jobs:
       - name: Setup JDK ${{ inputs.java-version }}
         uses: actions/setup-java@v2
         with:
-          distribution: 'adopt'
+          distribution: ${{ inputs.java-distribution }}
           java-version: ${{ inputs.java-version }}
           cache: 'gradle'
 

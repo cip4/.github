@@ -8,6 +8,11 @@ on:
         required: false
         type: number
         default: 11
+      java-distribution:
+        description: Java distribution to use for building.
+        required: false
+        type: string
+        default: 'temurin'
 
 jobs:
   build:
@@ -23,7 +28,7 @@ jobs:
       - name: Set up JDK ${{ inputs.java-version }}
         uses: actions/setup-java@v2
         with:
-          distribution: 'temurin'
+          distribution: ${{ inputs.java-distribution }}
           java-version: ${{ inputs.java-version }}
           cache: 'gradle'
 
