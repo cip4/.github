@@ -95,7 +95,7 @@ jobs:
           cache: 'gradle'
 
       - name: Build with Gradle
-        run: ./gradlew test shadowDistZip shadowDistTar -PprojectVersion="${GITHUB_REF/refs\/tags\//}" --no-daemon
+        run: ./gradlew test distZip distTar -PprojectVersion="${GITHUB_REF/refs\/tags\//}" --no-daemon
 
       - name: Rename .ZIP
         run: mv build/distributions/${{ env.PROJECT_ESCAPED }}-*.zip "build/distributions/${{ env.PROJECT }}-${GITHUB_REF/refs\/tags\//}.zip"

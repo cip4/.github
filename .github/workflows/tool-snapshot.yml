@@ -106,7 +106,7 @@ jobs:
 
       - name: Build with Gradle
         working-directory: ${{ inputs.working-directory }}
-        run: ./gradlew test shadowDistZip shadowDistTar --no-daemon
+        run: ./gradlew test distZip distTar --no-daemon
 
       - name: Rename .ZIP
         working-directory: ${{ inputs.working-directory }}
