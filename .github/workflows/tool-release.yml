@@ -98,10 +98,10 @@ jobs:
         run: ./gradlew test distZip distTar -PprojectVersion="${GITHUB_REF/refs\/tags\//}" --no-daemon
 
       - name: Rename .ZIP
-        run: mv build/distributions/${{ env.PROJECT_ESCAPED }}-*.zip "build/distributions/${{ env.PROJECT }}-${GITHUB_REF/refs\/tags\//}.zip"
+        run: mv build/distributions/${{ env.PROJECT_ESCAPED }}-*.zip "build/distributions/${{ env.PROJECT }}-${GITHUB_REF/refs\/tags\//}.zip" || true
 
       - name: Rename .TAR
-        run: mv build/distributions/${{ env.PROJECT_ESCAPED }}-*.tar "build/distributions/${{ env.PROJECT }}-${GITHUB_REF/refs\/tags\//}.tar"
+        run: mv build/distributions/${{ env.PROJECT_ESCAPED }}-*.tar "build/distributions/${{ env.PROJECT }}-${GITHUB_REF/refs\/tags\//}.tar" || true
 
       - name: Upload Binaries
         uses: actions/upload-artifact@v2
