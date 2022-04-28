@@ -39,7 +39,7 @@ jobs:
 
       - name: Test with Gradle (no coverage)
         if: ${{ !inputs.codecov-enabled }}
-        run: ./gradlew test jacocoTestReport --no-daemon
+        run: ./gradlew test --no-daemon
 
       - name: Test with Gradle (with coverage)
         if: inputs.codecov-enabled
