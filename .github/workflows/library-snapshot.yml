@@ -17,6 +17,11 @@ on:
         required: false
         type: string
         default: 'temurin'
+      codecov-enabled:
+        description: Flag to indicate whether a coverage report should be send to codecov.
+        required: false
+        type: boolean
+        default: false
     secrets:
       SIGNING_KEY:
         required: true
@@ -64,7 +69,18 @@ jobs:
           cache: 'gradle'
 
       - name: Build with Gradle
-        run: ./gradlew build -PprojectVersion=${{ env.VERSION }} --no-daemon
+        env:
+          CODECOV: inputs.codecov-enabled
+        run: |
+          TASKS=""; if ${CODECOV} == true; then TASKS="$TASKS jacocoTestReport"; fi
+          ./gradlew build ${TASKS} -PprojectVersion=${{ env.VERSION }} --no-daemon
+
+      - name: Submit Code coverage
+        if: inputs.codecov-enabled
+        uses: codecov/codecov-action@v2
+        with:
+          flags: ${{ matrix.os }}, JDK ${{ matrix.java }}
+          file: build/reports/jacoco/test/jacocoTestReport.xml
 
       - name: Upload Artifacts to GitHub Build Artifacts
         uses: actions/upload-artifact@v1
@@ -111,7 +127,18 @@ jobs:
           cache: 'gradle'
 
       - name: Test with Gradle
-        run: ./gradlew test --no-daemon
+        env:
+          CODECOV: inputs.codecov-enabled
+        run: |
+          TASKS=""; if ${CODECOV} == true; then TASKS="$TASKS jacocoTestReport"; fi
+          ./gradlew test ${TASKS} --no-daemon
+
+      - name: Submit Code coverage
+        if: inputs.codecov-enabled
+        uses: codecov/codecov-action@v2
+        with:
+          flags: ${{ matrix.os }}, JDK ${{ matrix.java }}
+          file: build/reports/jacoco/test/jacocoTestReport.xml
 
       - name: Upload Test Results to GitHub Build Artifacts
         if: ${{ always() }}

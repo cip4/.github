@@ -38,12 +38,11 @@ jobs:
           cache: 'gradle'
 
       - name: Test with Gradle (no coverage)
-        if: ${{ !inputs.codecov-enabled }}
-        run: ./gradlew test --no-daemon
-
-      - name: Test with Gradle (with coverage)
-        if: inputs.codecov-enabled
-        run: ./gradlew test jacocoTestReport --no-daemon
+        env:
+          CODECOV: inputs.codecov-enabled
+        run: |
+          TASKS=""; if ${CODECOV} == true; then TASKS="$TASKS jacocoTestReport"; fi
+          ./gradlew test ${TASK} --no-daemon
 
       - name: Submit Code coverage
         if: inputs.codecov-enabled
