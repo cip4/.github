@@ -37,7 +37,7 @@ jobs:
           java-version: ${{ inputs.java-version }}
           cache: 'gradle'
 
-      - name: Test with Gradle (no coverage)
+      - name: Test with Gradle
         env:
           CODECOV: inputs.codecov-enabled
         run: |
