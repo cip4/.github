@@ -72,7 +72,7 @@ jobs:
       - uses: haya14busa/action-cond@v1
         id: jacoco
         with:
-          cond: inputs.codecov-enabled
+          cond: ${{ inputs.codecov-enabled }}
           if_true: "jacocoTestReport"
           if_false: ""
 
@@ -133,7 +133,7 @@ jobs:
       - uses: haya14busa/action-cond@v1
         id: jacoco
         with:
-          cond: inputs.codecov-enabled
+          cond: ${{ inputs.codecov-enabled }}
           if_true: "jacocoTestReport"
           if_false: ""
 
