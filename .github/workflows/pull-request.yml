@@ -13,6 +13,11 @@ on:
         required: false
         type: string
         default: 'temurin'
+      codecov-enabled:
+        description: Flag to indicate whether a coverage report should be send to codecov.
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   build:
@@ -32,12 +37,24 @@ jobs:
           java-version: ${{ inputs.java-version }}
           cache: 'gradle'
 
-      - name: Test with Gradle
-        run: ./gradlew test --no-daemon
+      - name: Test with Gradle (no coverage)
+        if: ${{ !inputs.codecov-enabled }}
+        run: ./gradlew test jacocoTestReport --no-daemon
+
+      - name: Test with Gradle (with coverage)
+        if: inputs.codecov-enabled
+        run: ./gradlew test jacocoTestReport --no-daemon
+
+      - name: Submit Code coverage
+        if: inputs.codecov-enabled
+        uses: codecov/codecov-action@v2
+        with:
+          flags: ${{ matrix.os }}, JDK ${{ matrix.java }}
+          file: build/reports/jacoco/test/jacocoTestReport.xml
 
       - name: Upload Test Results to GitHub Build Artifacts
         if: ${{ always() }}
         uses: actions/upload-artifact@v1
         with:
-          name: test-results for ${{ matrix.os }}
+          name: test-results for ${{ matrix.os }},JDK-${{ inputs.java-version }}
           path: build/reports/tests/test
