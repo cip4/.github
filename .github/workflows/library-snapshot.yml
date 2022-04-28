@@ -68,12 +68,16 @@ jobs:
           java-version: ${{ inputs.java-version }}
           cache: 'gradle'
 
+
+      - uses: haya14busa/action-cond@v1
+        id: jacoco
+        with:
+          cond: inputs.codecov-enabled
+          if_true: "jacocoTestReport"
+          if_false: ""
+
       - name: Build with Gradle
-        env:
-          CODECOV: inputs.codecov-enabled
-        run: |
-          TASKS=""; if ${CODECOV} == true; then TASKS="$TASKS jacocoTestReport"; fi
-          ./gradlew build ${TASKS} -PprojectVersion=${{ env.VERSION }} --no-daemon
+        run: ./gradlew build ${{ steps.jacoco.outputs.value }} -PprojectVersion=${{ env.VERSION }} --no-daemon
 
       - name: Submit Code coverage
         if: inputs.codecov-enabled
@@ -126,12 +130,15 @@ jobs:
           java-version: ${{ inputs.java-version }}
           cache: 'gradle'
 
+      - uses: haya14busa/action-cond@v1
+        id: jacoco
+        with:
+          cond: inputs.codecov-enabled
+          if_true: "jacocoTestReport"
+          if_false: ""
+
       - name: Test with Gradle
-        env:
-          CODECOV: inputs.codecov-enabled
-        run: |
-          TASKS=""; if ${CODECOV} == true; then TASKS="$TASKS jacocoTestReport"; fi
-          ./gradlew test ${TASKS} --no-daemon
+        run: ./gradlew test ${{ steps.jacoco.outputs.value }} --no-daemon
 
       - name: Submit Code coverage
         if: inputs.codecov-enabled

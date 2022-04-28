@@ -37,12 +37,15 @@ jobs:
           java-version: ${{ inputs.java-version }}
           cache: 'gradle'
 
+      - uses: haya14busa/action-cond@v1
+        id: jacoco
+        with:
+          cond: inputs.codecov-enabled
+          if_true: "jacocoTestReport"
+          if_false: ""
+
       - name: Test with Gradle
-        env:
-          CODECOV: inputs.codecov-enabled
-        run: |
-          TASKS=""; if ${CODECOV} == true; then TASKS="$TASKS jacocoTestReport"; fi
-          ./gradlew test ${TASK} --no-daemon
+        run: ./gradlew test ${{ steps.jacoco.outputs.value }} --no-daemon
 
       - name: Submit Code coverage
         if: inputs.codecov-enabled
