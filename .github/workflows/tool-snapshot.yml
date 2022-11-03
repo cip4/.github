@@ -117,7 +117,7 @@ jobs:
         run: mv build/distributions/${{ env.PROJECT_ESCAPED }}-*.tar "build/distributions/${{ env.PROJECT }}-SNAPSHOT-${{ github.run_number }}.tar"
 
       - name: Upload Binaries
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: binaries
           path: ${{ inputs.working-directory }}/build/distributions/${{ env.PROJECT }}-*.*
@@ -197,7 +197,7 @@ jobs:
           mv "${{ env.NOTARIZE_PATH }}" "build/jpackage/${{ env.PROJECT }}-SNAPSHOT-${{ github.run_number }}.dmg"
 
       - name: Upload Binaries
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: binaries
           path: ${{ inputs.working-directory }}/build/jpackage/${{ env.PROJECT }}-*.dmg
@@ -242,7 +242,7 @@ jobs:
           & 'C:/Program Files (x86)/Windows Kits/10/bin/10.0.17763.0/x86/signtool.exe' --% sign /f certificate\certificate.pfx /sha1 %CERTIFICATE_SHA1% /d "Installer for JDFEitor" /p %BUILD_CERTIFICATE_PASSWORD% /v /fd SHA256 /tr "http://timestamp.digicert.com/" /td SHA256 "build/jpackage/${{ env.PROJECT }}-*.msi"
 
       - name: Upload Binaries
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: binaries
           path: ${{ inputs.working-directory }}/build/jpackage/${{ env.PROJECT }}-*.msi
