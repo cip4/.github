@@ -296,7 +296,7 @@ jobs:
       PROJECT: ${{ needs.extract-info.outputs.PROJECT }}
     steps:
       - name: Download all workflow run artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: binaries
           path: binaries
