@@ -78,9 +78,9 @@ jobs:
           PROJECT=$(cat settings.gradle | grep -o -P "(?<=rootProject.name = ').*(?=')")
           PROJECT_ESCAPED=$(printf %q "$PROJECT")
           PROJECT_HANDLE=$(echo "$PROJECT" | sed "s/CIP4 //" | tr '[:upper:]' '[:lower:]')
-          echo "::set-output name=PROJECT::$PROJECT"
-          echo "::set-output name=PROJECT_ESCAPED::$PROJECT_ESCAPED"
-          echo "::set-output name=PROJECT_HANDLE::$PROJECT_HANDLE"
+          echo "PROJECT=$PROJECT" >> $GITHUB_OUTPUT
+          echo "PROJECT_ESCAPED=$PROJECT_ESCAPED" >> $GITHUB_OUTPUT
+          echo "PROJECT_HANDLE=$PROJECT_HANDLE" >> $GITHUB_OUTPUT
     outputs:
       PROJECT: ${{ steps.retrieveProject.outputs.PROJECT }}
       PROJECT_ESCAPED: ${{ steps.retrieveProject.outputs.PROJECT_ESCAPED }}
