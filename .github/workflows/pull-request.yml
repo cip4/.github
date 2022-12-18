@@ -45,7 +45,7 @@ jobs:
           if_false: ""
 
       - name: Test with Gradle
-        run: ./gradlew test ${{ steps.jacoco.outputs.value }} --no-daemon
+        run: ./gradlew test ${{ steps.jacoco.outputs.value }}
 
       - name: Submit Code coverage
         if: inputs.codecov-enabled
