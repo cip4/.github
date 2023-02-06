@@ -110,7 +110,7 @@ jobs:
           path: build/distributions/${{ env.PROJECT }}-*.*
 
       - name: Upload binaries to release
-        uses: svenstaro/upload-release-action@2.3.0
+        uses: svenstaro/upload-release-action@2.4.1
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: build/distributions/${{ env.PROJECT }}-*.*
@@ -198,7 +198,7 @@ jobs:
           path: build/jpackage/${{ env.PROJECT }}-*.dmg
 
       - name: Upload binaries to release
-        uses: svenstaro/upload-release-action@2.3.0
+        uses: svenstaro/upload-release-action@2.4.1
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: build/jpackage/${{ env.PROJECT }}-*.dmg
@@ -248,7 +248,7 @@ jobs:
           path: build/jpackage/${{ env.PROJECT }}-*.msi
 
       - name: Upload binaries to release
-        uses: svenstaro/upload-release-action@2.3.0
+        uses: svenstaro/upload-release-action@2.4.1
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: build/jpackage/${{ env.PROJECT }}-*.msi
