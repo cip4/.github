@@ -47,7 +47,7 @@ jobs:
         id: extract-info
         run: |
           VERSION=$( git describe --tags --abbrev=0 | sed  "s/^v\?\(.*\)\.[[:digit:]]\+$/\\1.x-SNAPSHOT/")
-          echo "::set-output name=VERSION::$VERSION"
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
     outputs:
       VERSION: ${{ steps.extract-info.outputs.VERSION }}
 
