@@ -77,7 +77,7 @@ jobs:
           if_false: ""
 
       - name: Build with Gradle
-        run: ./gradlew build ${{ steps.jacoco.outputs.value }} -PprojectVersion=${{ env.VERSION }}
+        run: ./gradlew build ${{ steps.jacoco.outputs.value }} -PprojectVersion=${{ env.VERSION }}  --no-daemon
 
       - name: Submit Code coverage
         if: inputs.codecov-enabled
@@ -138,7 +138,7 @@ jobs:
           if_false: ""
 
       - name: Test with Gradle
-        run: ./gradlew test ${{ steps.jacoco.outputs.value }}
+        run: ./gradlew test ${{ steps.jacoco.outputs.value }} --no-daemon
 
       - name: Submit Code coverage
         if: inputs.codecov-enabled
