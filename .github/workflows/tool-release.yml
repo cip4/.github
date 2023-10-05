@@ -60,7 +60,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out sources...
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Retrieve Project Name
         id: retrieveProject
@@ -85,7 +85,7 @@ jobs:
       PROJECT_ESCAPED: ${{ needs.extract-info.outputs.PROJECT_ESCAPED }}
     steps:
       - name: Check out sources...
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup JDK ${{ inputs.java-version }}
         uses: actions/setup-java@v3
@@ -127,7 +127,7 @@ jobs:
       PROJECT_ESCAPED: ${{ needs.extract-info.outputs.PROJECT_ESCAPED }}
     steps:
       - name: Check out sources...
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup JDK ${{ inputs.java-version }}
         uses: actions/setup-java@v3
@@ -215,7 +215,7 @@ jobs:
       PROJECT_ESCAPED: ${{ needs.extract-info.outputs.PROJECT_ESCAPED }}
     steps:
       - name: Check out sources...
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup JDK ${{ inputs.java-version }}
         uses: actions/setup-java@v3
@@ -268,7 +268,7 @@ jobs:
       RUN_REGION: europe-west1
     steps:
       - name: Check out sources...
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Build docker container
         run: |-

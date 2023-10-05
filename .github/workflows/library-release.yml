@@ -34,7 +34,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out sources...
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up JDK ${{ inputs.java-version }}
         uses: actions/setup-java@v3
@@ -90,7 +90,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Check out sources...
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up JDK ${{ inputs.java-version }}
         uses: actions/setup-java@v3
