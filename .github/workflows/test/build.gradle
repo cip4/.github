@@ -6,6 +6,7 @@ plugins {
 }
 
 mainClassName = 'org.cip4.github.workflow.test.Main'
+version = '1.0.0'
 
 runtime {
     jpackage {
