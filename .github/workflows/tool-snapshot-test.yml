@@ -1,6 +1,7 @@
 name: "Test: Tool Snapshot"
 
 on:
+  workflow_dispatch:
   push:
     branches: [ development ]
 jobs:

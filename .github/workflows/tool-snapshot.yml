@@ -193,7 +193,7 @@ jobs:
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD}}
           NOTARIZE_PATH: ./build/jpackage/${{ env.PROJECT }}.dmg
         run: |
-          xcrun notarytool submit ./build/jpackage/${{ env.PROJECT_ESCAPED }}-*.dmg --apple-id "infrastructure@cip4.org" --password {{ env.APPLE_PASSWORD }} --team-id 4DL5XX9SG8 --wait
+          xcrun notarytool submit ./build/jpackage/${{ env.PROJECT_ESCAPED }}-*.dmg --apple-id "infrastructure@cip4.org" --password ${{ env.APPLE_PASSWORD }} --team-id 4DL5XX9SG8 --wait
           mv ./build/jpackage/${{ env.PROJECT_ESCAPED }}-*.dmg "build/jpackage/${{ env.PROJECT }}-SNAPSHOT-${{ github.run_number }}.dmg"
 
       - name: Upload Binaries
