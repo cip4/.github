@@ -161,6 +161,11 @@ jobs:
           java-version: ${{ inputs.java-version }}
           cache: 'gradle'
 
+      - name: Setup Tooling
+        run: |
+          brew tap mitchellh/gon
+          brew install mitchellh/gon/gon
+
       - name: Install the Apple certificate
         env:
           BUILD_CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE}}
@@ -291,6 +296,9 @@ jobs:
         uses: google-github-actions/setup-gcloud@v1
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Check out sources...
+        uses: actions/checkout@v4
 
       - name: Build docker container
         run: |-
