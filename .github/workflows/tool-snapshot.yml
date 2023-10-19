@@ -161,11 +161,6 @@ jobs:
           java-version: ${{ inputs.java-version }}
           cache: 'gradle'
 
-      - name: Setup Tooling
-        run: |
-          brew tap mitchellh/gon
-          brew install mitchellh/gon/gon
-
       - name: Install the Apple certificate
         env:
           BUILD_CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE}}
@@ -197,25 +192,9 @@ jobs:
         env:
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD}}
           NOTARIZE_PATH: ./build/jpackage/${{ env.PROJECT }}.dmg
-          BUNDLE_ID: ${{ inputs.apple-bundle-id }}
         run: |
-          echo '
-          {
-            "notarize": [
-              {
-                "path": "${{ env.NOTARIZE_PATH }}",
-                "bundle_id": "${{ env.BUNDLE_ID }}",
-                "staple": true
-              }
-            ],
-            "apple_id": {
-              "username": "infrastructure@cip4.org",
-              "password": "@env:APPLE_PASSWORD"
-            }
-          }' > gon-notarize.json
-          mv ./build/jpackage/${{ env.PROJECT_ESCAPED }}-*.dmg "${{ env.NOTARIZE_PATH }}"
-          gon gon-notarize.json
-          mv "${{ env.NOTARIZE_PATH }}" "build/jpackage/${{ env.PROJECT }}-SNAPSHOT-${{ github.run_number }}.dmg"
+          xcrun notarytool submit ./build/jpackage/${{ env.PROJECT_ESCAPED }}-*.dmg --apple-id "infrastructure@cip4.org" --password {{ env.APPLE_PASSWORD }} --team-id 4DL5XX9SG8 --wait
+          mv ./build/jpackage/${{ env.PROJECT_ESCAPED }}-*.dmg "build/jpackage/${{ env.PROJECT }}-SNAPSHOT-${{ github.run_number }}.dmg"
 
       - name: Upload Binaries
         uses: actions/upload-artifact@v3

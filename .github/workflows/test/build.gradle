@@ -7,3 +7,16 @@ plugins {
 
 mainClassName = 'org.cip4.github.workflow.test.Main'
 
+runtime {
+    jpackage {
+        def currentOs = org.gradle.internal.os.OperatingSystem.current()
+        if (currentOs.macOsX) {
+            imageOptions += [
+                    "--mac-sign",
+                    "--mac-signing-key-user-name", "CIP4 Organization (4DL5XX9SG8)",
+                    "--mac-package-identifier", "org.cip4.alces"
+            ]
+        }
+        appVersion = "1.0.0"
+    }
+}
