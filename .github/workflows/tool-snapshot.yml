@@ -279,6 +279,9 @@ jobs:
       SERVICE_NAME: ${{ needs.extract-info.outputs.PROJECT_HANDLE }}-cip4-org
       RUN_REGION: europe-west1
     steps:
+      - name: Check out sources...
+        uses: actions/checkout@v4
+
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v1
         with:
@@ -288,9 +291,6 @@ jobs:
         uses: google-github-actions/setup-gcloud@v1
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
-
-      - name: Check out sources...
-        uses: actions/checkout@v4
 
       - name: Build docker container
         run: |-
