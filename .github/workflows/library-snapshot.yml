@@ -62,7 +62,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up JDK ${{ inputs.java-version }}
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: ${{ inputs.java-distribution }}
           java-version: ${{ inputs.java-version }}
@@ -124,7 +124,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up JDK ${{ inputs.java-version }}
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: ${{ inputs.java-version }}
