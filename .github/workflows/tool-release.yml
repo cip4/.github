@@ -104,7 +104,7 @@ jobs:
         run: mv build/distributions/${{ env.PROJECT_ESCAPED }}-*.tar "build/distributions/${{ env.PROJECT }}-${GITHUB_REF/refs\/tags\//}.tar" || true
 
       - name: Upload Binaries
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: binaries
           path: build/distributions/${{ env.PROJECT }}-*.*
@@ -171,7 +171,7 @@ jobs:
           mv ./build/jpackage/${{ env.PROJECT_ESCAPED }}-*.dmg "build/jpackage/${{ env.PROJECT }}-${GITHUB_REF/refs\/tags\//}.dmg"
 
       - name: Upload Binaries
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: binaries
           path: build/jpackage/${{ env.PROJECT }}-*.dmg
@@ -221,7 +221,7 @@ jobs:
           & 'C:/Program Files (x86)/Windows Kits/10/bin/10.0.17763.0/x86/signtool.exe' --% sign /f certificate\certificate.pfx /sha1 %CERTIFICATE_SHA1% /d "Installer for ${{ env.PROJECT }}" /p %BUILD_CERTIFICATE_PASSWORD% /v /fd SHA256 /tr "http://timestamp.digicert.com/" /td SHA256 "build/jpackage/${{ env.PROJECT }}-*.msi"
 
       - name: Upload Binaries
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: binaries
           path: build/jpackage/${{ env.PROJECT }}-*.msi
