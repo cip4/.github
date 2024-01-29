@@ -87,14 +87,14 @@ jobs:
           file: build/reports/jacoco/test/jacocoTestReport.xml
 
       - name: Upload Artifacts to GitHub Build Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: libs
           path: build/libs
 
       - name: Upload Test Results to GitHub Build Artifacts
         if: ${{ always() }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: test-results linux
           path: build/reports/tests/test
@@ -149,7 +149,7 @@ jobs:
 
       - name: Upload Test Results to GitHub Build Artifacts
         if: ${{ always() }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: test-results windows
           path: build/reports/tests/test
