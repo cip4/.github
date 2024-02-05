@@ -81,7 +81,7 @@ jobs:
 
       - name: Submit Code coverage
         if: inputs.codecov-enabled
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           flags: ${{ matrix.os }}, JDK ${{ matrix.java }}
           file: build/reports/jacoco/test/jacocoTestReport.xml
@@ -142,7 +142,7 @@ jobs:
 
       - name: Submit Code coverage
         if: inputs.codecov-enabled
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           flags: ${{ matrix.os }}, JDK ${{ matrix.java }}
           file: build/reports/jacoco/test/jacocoTestReport.xml
