@@ -47,7 +47,7 @@ jobs:
         run: ./gradlew build -PprojectVersion=${GITHUB_REF##*/} --no-daemon
 
       - name: Attach files to GitHub Release
-        uses: svenstaro/upload-release-action@2.7.0
+        uses: svenstaro/upload-release-action@2.9.0
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: build/libs/*
