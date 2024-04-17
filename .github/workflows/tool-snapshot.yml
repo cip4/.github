@@ -247,7 +247,7 @@ jobs:
 
       - name: Authenticate to Google Cloud
         id: google-auth
-        uses: google-github-actions/auth@v1
+        uses: google-github-actions/auth@v2
         with:
           credentials_json: '${{ secrets.GCP_SA_KEY }}'
 
@@ -255,7 +255,6 @@ jobs:
         uses: google-github-actions/setup-gcloud@v2
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
-          token_format: access_token
 
       - name: Sign MSI
         env:
@@ -265,7 +264,7 @@ jobs:
           
           java -jar jsign.jar \
               --storetype GOOGLECLOUD \
-              --storepass "${{ steps.google-auth.outputs.access_token }}" \
+              --storepass "${{ steps.google-auth.outputs.auth_token }}" \
               --keystore "projects/${{ secrets.GCP_PROJECT_ID }}/locations/europe/keyRings/github" \
               --alias "code-sign" \
               --certfile "codesign-chain.pem" \
