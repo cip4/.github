@@ -125,7 +125,6 @@ jobs:
         working-directory: ${{ inputs.working-directory }}
         run: mv build/distributions/${{ env.PROJECT_ESCAPED }}-*.tar "build/distributions/${{ env.PROJECT }}-SNAPSHOT-${{ github.run_number }}.tar"
 
-
       - name: Submit Code coverage
         if: inputs.codecov-enabled
         uses: codecov/codecov-action@v3
@@ -156,11 +155,7 @@ jobs:
           distribution: 'adopt'
           java-version: ${{ inputs.java-version }}
           cache: 'gradle'
-
-      - name: Setup Tooling
-        run: |
-          brew tap mitchellh/gon
-          brew install mitchellh/gon/gon
+          check-latest: true
 
       - name: Install the Apple certificate
         env:
@@ -220,6 +215,7 @@ jobs:
           distribution: 'adopt'
           java-version: ${{ inputs.java-version }}
           cache: 'gradle'
+          check-latest: true
 
       - uses: haya14busa/action-cond@v1
         id: jacoco
@@ -249,7 +245,6 @@ jobs:
           credentials_json: '${{ secrets.GCP_SA_KEY }}'
           token_format: access_token
           service_account: github@cip4-net.iam.gserviceaccount.com
-
 
       - name: Sign MSI
         env:
