@@ -243,7 +243,7 @@ jobs:
       - name: Download JSign
         run: |
           curl -L -o jsign.jar https://github.com/ebourg/jsign/releases/download/6.0/jsign-6.0.jar
-          echo "290377fc4f593256200b3ea4061b7409e8276255f449d4c6de7833faf0850cc1  jsign.jar" | sha256sum -c
+          echo "05ca18d4ab7b8c2183289b5378d32860f0ea0f3bdab1f1b8cae5894fb225fa8a  jsign.jar" | sha256sum -c
 
       - name: Authenticate to Google Cloud
         id: google-auth
