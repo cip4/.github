@@ -51,11 +51,7 @@ on:
         required: true
       ATLASSIAN_TOKEN:
         required: true
-      CODE_SIGN_CERTIFICATE:
-        required: true
-      CODE_SIGN_PASSWORD:
-        required: true
-      CODE_SIGN_SHA1:
+      CODESIGN_CHAIN:
         required: true
       GCP_SA_KEY:
         required: false
