@@ -240,18 +240,38 @@ jobs:
         working-directory: ${{ inputs.working-directory }}
         run: mv build/jpackage/${{ env.PROJECT_ESCAPED }}*.msi "build/jpackage/${{ env.PROJECT }}-SNAPSHOT-${{ github.run_number }}.msi"
 
+      - name: Download JSign
+        run: |
+          curl -L -o jsign.jar https://github.com/ebourg/jsign/releases/download/6.0/jsign-6.0.jar
+          echo "290377fc4f593256200b3ea4061b7409e8276255f449d4c6de7833faf0850cc1  jsign.jar" | sha256sum -c
+
+      - name: Authenticate to Google Cloud
+        id: google-auth
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: '${{ secrets.GCP_SA_KEY }}'
+
+      - name: Setup GCloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          token_format: access_token
+
       - name: Sign MSI
         env:
-          BUILD_CERTIFICATE: ${{ secrets.CODE_SIGN_CERTIFICATE }}
-          BUILD_CERTIFICATE_PASSWORD: ${{ secrets.CODE_SIGN_PASSWORD }}
-          CERTIFICATE_SHA1: ${{ secrets.CODE_SIGN_SHA1 }}
-        shell: pwsh
+          CODESIGN_CHAIN: ${{ secrets.CODESIGN_CHAIN }}
         run: |
-          New-Item -ItemType directory -Path certificate
-          $env:BUILD_CERTIFICATE | Out-File certificate\certificate.pem
-          certutil -decode certificate\certificate.pem certificate\certificate.pfx
-
-          & 'C:/Program Files (x86)/Windows Kits/10/bin/10.0.17763.0/x86/signtool.exe' --% sign /f certificate\certificate.pfx /sha1 %CERTIFICATE_SHA1% /d "Installer for ${{ env.PROJECT }}" /p %BUILD_CERTIFICATE_PASSWORD% /v /fd SHA256 /tr "http://timestamp.digicert.com/" /td SHA256 "build/jpackage/${{ env.PROJECT }}-*.msi"
+          echo "$CODESIGN_CHAIN" > codesign-chain.pem
+          
+          java -jar jsign.jar \
+              --storetype GOOGLECLOUD \
+              --storepass "${{ steps.google-auth.outputs.access_token }}" \
+              --keystore "projects/${{ secrets.GCP_PROJECT_ID }}/locations/europe/keyRings/github" \
+              --alias "code-sign" \
+              --certfile "codesign-chain.pem" \
+              --tsmode RFC3161 \
+              --tsaurl http://timestamp.globalsign.com/tsa/r6advanced1 \
+              "build/jpackage/${{ env.PROJECT }}-*.msi"
 
       - name: Submit Code coverage
         if: inputs.codecov-enabled
