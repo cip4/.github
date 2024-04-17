@@ -247,6 +247,9 @@ jobs:
         uses: google-github-actions/auth@v2
         with:
           credentials_json: '${{ secrets.GCP_SA_KEY }}'
+          token_format: access_token
+          service_account: github@cip4-net.iam.gserviceaccount.com
+
 
       - name: Sign MSI
         env:
@@ -257,7 +260,7 @@ jobs:
 
           java -jar jsign.jar \
               --storetype GOOGLECLOUD \
-              --storepass "${{ steps.google-auth.outputs.auth_token }}" \
+              --storepass "${{ steps.google-auth.outputs.access_token }}" \
               --keystore "projects/${{ secrets.GCP_PROJECT_ID }}/locations/europe/keyRings/github" \
               --alias "code-sign" \
               --certfile "codesign-chain.pem" \
