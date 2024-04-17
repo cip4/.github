@@ -261,7 +261,7 @@ jobs:
               --certfile "codesign-chain.pem" \
               --tsmode RFC3161 \
               --tsaurl http://timestamp.globalsign.com/tsa/r6advanced1 \
-              build/jpackage/${{ env.PROJECT }}-*.msi
+              build/jpackage/${{ env.PROJECT_ESCAPED }}-*.msi
 
       - name: Submit Code coverage
         if: inputs.codecov-enabled
