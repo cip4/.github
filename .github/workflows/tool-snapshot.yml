@@ -252,7 +252,7 @@ jobs:
           CODESIGN_CHAIN: ${{ secrets.CODESIGN_CHAIN }}
         run: |
           echo "$CODESIGN_CHAIN" > codesign-chain.pem
-          
+          ls -lah build/jpackage
           java -jar jsign.jar \
               --storetype GOOGLECLOUD \
               --storepass "${{ steps.google-auth.outputs.auth_token }}" \
