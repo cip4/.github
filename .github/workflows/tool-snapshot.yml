@@ -51,11 +51,7 @@ on:
         required: true
       ATLASSIAN_TOKEN:
         required: true
-      CODE_SIGN_CERTIFICATE:
-        required: true
-      CODE_SIGN_PASSWORD:
-        required: true
-      CODE_SIGN_SHA1:
+      CODESIGN_CHAIN:
         required: true
       GCP_SA_KEY:
         required: false
@@ -129,7 +125,6 @@ jobs:
         working-directory: ${{ inputs.working-directory }}
         run: mv build/distributions/${{ env.PROJECT_ESCAPED }}-*.tar "build/distributions/${{ env.PROJECT }}-SNAPSHOT-${{ github.run_number }}.tar"
 
-
       - name: Submit Code coverage
         if: inputs.codecov-enabled
         uses: codecov/codecov-action@v3
@@ -160,6 +155,7 @@ jobs:
           distribution: 'adopt'
           java-version: ${{ inputs.java-version }}
           cache: 'gradle'
+          check-latest: true
 
       - name: Install the Apple certificate
         env:
@@ -219,6 +215,7 @@ jobs:
           distribution: 'adopt'
           java-version: ${{ inputs.java-version }}
           cache: 'gradle'
+          check-latest: true
 
       - uses: haya14busa/action-cond@v1
         id: jacoco
@@ -235,32 +232,51 @@ jobs:
         working-directory: ${{ inputs.working-directory }}
         run: mv build/jpackage/${{ env.PROJECT_ESCAPED }}*.msi "build/jpackage/${{ env.PROJECT }}-SNAPSHOT-${{ github.run_number }}.msi"
 
+      - name: Download JSign
+        working-directory: ${{ inputs.working-directory }}
+        run: |
+          curl -L -o jsign.jar https://github.com/ebourg/jsign/releases/download/6.0/jsign-6.0.jar
+          echo "05ca18d4ab7b8c2183289b5378d32860f0ea0f3bdab1f1b8cae5894fb225fa8a  jsign.jar" | sha256sum -c
+
+      - name: Authenticate to Google Cloud
+        id: google-auth
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: '${{ secrets.GCP_SA_KEY }}'
+          token_format: access_token
+          service_account: github@cip4-net.iam.gserviceaccount.com
+
       - name: Sign MSI
         env:
-          BUILD_CERTIFICATE: ${{ secrets.CODE_SIGN_CERTIFICATE }}
-          BUILD_CERTIFICATE_PASSWORD: ${{ secrets.CODE_SIGN_PASSWORD }}
-          CERTIFICATE_SHA1: ${{ secrets.CODE_SIGN_SHA1 }}
-        shell: pwsh
+          CODESIGN_CHAIN: ${{ secrets.CODESIGN_CHAIN }}
+        working-directory: ${{ inputs.working-directory }}
         run: |
-          New-Item -ItemType directory -Path certificate
-          $env:BUILD_CERTIFICATE | Out-File certificate\certificate.pem
-          certutil -decode certificate\certificate.pem certificate\certificate.pfx
+          echo "$CODESIGN_CHAIN" > codesign-chain.pem
 
-          & 'C:/Program Files (x86)/Windows Kits/10/bin/10.0.17763.0/x86/signtool.exe' --% sign /f certificate\certificate.pfx /sha1 %CERTIFICATE_SHA1% /d "Installer for ${{ env.PROJECT }}" /p %BUILD_CERTIFICATE_PASSWORD% /v /fd SHA256 /tr "http://timestamp.digicert.com/" /td SHA256 "build/jpackage/${{ env.PROJECT }}-*.msi"
+          java -jar jsign.jar \
+              --storetype GOOGLECLOUD \
+              --storepass "${{ steps.google-auth.outputs.access_token }}" \
+              --keystore "projects/${{ secrets.GCP_PROJECT_ID }}/locations/europe/keyRings/github" \
+              --alias "code-sign" \
+              --certfile "codesign-chain.pem" \
+              --tsmode RFC3161 \
+              --tsaurl http://timestamp.globalsign.com/tsa/r6advanced1 \
+              --name "Installer for ${{ env.PROJECT }}" \
+              build/jpackage/${{ env.PROJECT_ESCAPED }}-SNAPSHOT-*.msi
 
       - name: Submit Code coverage
         if: inputs.codecov-enabled
         uses: codecov/codecov-action@v3
         with:
           flags: ${{ matrix.os }}, JDK ${{ matrix.java }}
-          file: build/reports/jacoco/test/jacocoTestReport.xml
+          file: ${{ inputs.working-directory }}/build/reports/jacoco/test/jacocoTestReport.xml
 
       - name: Upload Test Results to GitHub Build Artifacts
         if: ${{ always() }}
         uses: actions/upload-artifact@v3
         with:
           name: test-results windows
-          path: build/reports/tests/test
+          path: ${{ inputs.working-directory }}/build/reports/tests/test
 
       - name: Upload Binaries
         uses: actions/upload-artifact@v3
@@ -291,6 +307,9 @@ jobs:
         uses: google-github-actions/setup-gcloud@v2
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Check out sources...
+        uses: actions/checkout@v4
 
       - name: Build docker container
         run: |-

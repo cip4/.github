@@ -25,6 +25,11 @@ on:
         required: false
         type: string
         default: 'adopt'
+      working-directory:
+        description: Working directory for the workflow
+        required: false
+        type: string
+        default: ./
       docker-build:
         description: Flag if docker image should be build and published
         required: false
@@ -41,12 +46,12 @@ on:
         required: true
       ATLASSIAN_TOKEN:
         required: true
-      CODE_SIGN_CERTIFICATE:
+      CODESIGN_CHAIN:
         required: true
-      CODE_SIGN_PASSWORD:
-        required: true
-      CODE_SIGN_SHA1:
-        required: true
+      GCP_SA_KEY:
+        required: false
+      GCP_PROJECT_ID:
+        required: false
       DOCKER_HUB_USERNAME:
         required: false
       DOCKER_HUB_PASSWORD:
@@ -64,6 +69,7 @@ jobs:
 
       - name: Retrieve Project Name
         id: retrieveProject
+        working-directory: ${{ inputs.working-directory }}
         run: |
           PROJECT=$(cat settings.gradle | grep -o -P "(?<=rootProject.name = ').*(?=')")
           PROJECT_ESCAPED=$(printf %q "$PROJECT")
@@ -95,25 +101,28 @@ jobs:
           cache: 'gradle'
 
       - name: Build with Gradle
+        working-directory: ${{ inputs.working-directory }}
         run: ./gradlew test distZip distTar -PprojectVersion="${GITHUB_REF/refs\/tags\//}" --no-daemon
 
       - name: Rename .ZIP
+        working-directory: ${{ inputs.working-directory }}
         run: mv build/distributions/${{ env.PROJECT_ESCAPED }}-*.zip "build/distributions/${{ env.PROJECT }}-${GITHUB_REF/refs\/tags\//}.zip" || true
 
       - name: Rename .TAR
+        working-directory: ${{ inputs.working-directory }}
         run: mv build/distributions/${{ env.PROJECT_ESCAPED }}-*.tar "build/distributions/${{ env.PROJECT }}-${GITHUB_REF/refs\/tags\//}.tar" || true
 
       - name: Upload Binaries
         uses: actions/upload-artifact@v3
         with:
           name: binaries
-          path: build/distributions/${{ env.PROJECT }}-*.*
+          path: ${{ inputs.working-directory }}/build/distributions/${{ env.PROJECT }}-*.*
 
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@2.7.0
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: build/distributions/${{ env.PROJECT }}-*.*
+          file: ${{ inputs.working-directory }}/build/distributions/${{ env.PROJECT }}-*.*
           tag: ${{ github.ref }}
           overwrite: true
           file_glob: true
@@ -160,9 +169,11 @@ jobs:
           security list-keychain -d user -s $KEYCHAIN_PATH
 
       - name: Build with Gradle
+        working-directory: ${{ inputs.working-directory }}
         run: ./gradlew test jpackage -PprojectVersion="${GITHUB_REF/refs\/tags\//}" --no-daemon
 
       - name: ✏️Notarize
+        working-directory: ${{ inputs.working-directory }}
         env:
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD}}
           NOTARIZE_PATH: ./build/jpackage/${{ env.PROJECT }}.dmg
@@ -174,13 +185,13 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: binaries
-          path: build/jpackage/${{ env.PROJECT }}-*.dmg
+          path: ${{ inputs.working-directory }}/build/jpackage/${{ env.PROJECT }}-*.dmg
 
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@2.7.0
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: build/jpackage/${{ env.PROJECT }}-*.dmg
+          file: ${{ inputs.working-directory }}/build/jpackage/${{ env.PROJECT }}-*.dmg
           tag: ${{ github.ref }}
           overwrite: true
           file_glob: true
@@ -205,32 +216,52 @@ jobs:
           check-latest: true
 
       - name: Build with Gradle
+        working-directory: ${{ inputs.working-directory }}
         run: ./gradlew test jpackage -PprojectVersion="${GITHUB_REF/refs\/tags\//}" --no-daemon
+
+      - name: Download JSign
+        working-directory: ${{ inputs.working-directory }}
+        run: |
+          curl -L -o jsign.jar https://github.com/ebourg/jsign/releases/download/6.0/jsign-6.0.jar
+          echo "05ca18d4ab7b8c2183289b5378d32860f0ea0f3bdab1f1b8cae5894fb225fa8a  jsign.jar" | sha256sum -c
+
+      - name: Authenticate to Google Cloud
+        id: google-auth
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: '${{ secrets.GCP_SA_KEY }}'
+          token_format: access_token
+          service_account: github@cip4-net.iam.gserviceaccount.com
 
       - name: Sign MSI
         env:
-          BUILD_CERTIFICATE: ${{ secrets.CODE_SIGN_CERTIFICATE }}
-          BUILD_CERTIFICATE_PASSWORD: ${{ secrets.CODE_SIGN_PASSWORD }}
-          CERTIFICATE_SHA1: ${{ secrets.CODE_SIGN_SHA1 }}
-        shell: pwsh
+          CODESIGN_CHAIN: ${{ secrets.CODESIGN_CHAIN }}
+        working-directory: ${{ inputs.working-directory }}
         run: |
-          New-Item -ItemType directory -Path certificate
-          $env:BUILD_CERTIFICATE | Out-File certificate\certificate.pem
-          certutil -decode certificate\certificate.pem certificate\certificate.pfx
+          echo "$CODESIGN_CHAIN" > codesign-chain.pem
 
-          & 'C:/Program Files (x86)/Windows Kits/10/bin/10.0.17763.0/x86/signtool.exe' --% sign /f certificate\certificate.pfx /sha1 %CERTIFICATE_SHA1% /d "Installer for ${{ env.PROJECT }}" /p %BUILD_CERTIFICATE_PASSWORD% /v /fd SHA256 /tr "http://timestamp.digicert.com/" /td SHA256 "build/jpackage/${{ env.PROJECT }}-*.msi"
+          java -jar jsign.jar \
+              --storetype GOOGLECLOUD \
+              --storepass "${{ steps.google-auth.outputs.access_token }}" \
+              --keystore "projects/${{ secrets.GCP_PROJECT_ID }}/locations/europe/keyRings/github" \
+              --alias "code-sign" \
+              --certfile "codesign-chain.pem" \
+              --tsmode RFC3161 \
+              --tsaurl http://timestamp.globalsign.com/tsa/r6advanced1 \
+              --name "Installer for ${{ env.PROJECT }}" \
+              build/jpackage/${{ env.PROJECT_ESCAPED }}-*.msi
 
       - name: Upload Binaries
         uses: actions/upload-artifact@v3
         with:
           name: binaries
-          path: build/jpackage/${{ env.PROJECT }}-*.msi
+          path: ${{ inputs.working-directory }}/build/jpackage/${{ env.PROJECT }}-*.msi
 
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@2.7.0
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: build/jpackage/${{ env.PROJECT }}-*.msi
+          file: ${{ inputs.working-directory }}/build/jpackage/${{ env.PROJECT }}-*.msi
           tag: ${{ github.ref }}
           overwrite: true
           file_glob: true
