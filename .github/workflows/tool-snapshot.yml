@@ -237,6 +237,7 @@ jobs:
         run: mv build/jpackage/${{ env.PROJECT_ESCAPED }}*.msi "build/jpackage/${{ env.PROJECT }}-SNAPSHOT-${{ github.run_number }}.msi"
 
       - name: Download JSign
+        working-directory: ${{ inputs.working-directory }}
         run: |
           curl -L -o jsign.jar https://github.com/ebourg/jsign/releases/download/6.0/jsign-6.0.jar
           echo "05ca18d4ab7b8c2183289b5378d32860f0ea0f3bdab1f1b8cae5894fb225fa8a  jsign.jar" | sha256sum -c
@@ -250,9 +251,10 @@ jobs:
       - name: Sign MSI
         env:
           CODESIGN_CHAIN: ${{ secrets.CODESIGN_CHAIN }}
+        working-directory: ${{ inputs.working-directory }}
         run: |
           echo "$CODESIGN_CHAIN" > codesign-chain.pem
-          ls -lah build/jpackage
+
           java -jar jsign.jar \
               --storetype GOOGLECLOUD \
               --storepass "${{ steps.google-auth.outputs.auth_token }}" \
@@ -261,21 +263,21 @@ jobs:
               --certfile "codesign-chain.pem" \
               --tsmode RFC3161 \
               --tsaurl http://timestamp.globalsign.com/tsa/r6advanced1 \
-              "build/jpackage/${{ env.PROJECT }}-SNAPSHOT-${{ github.run_number }}.msi"
+              build/jpackage/${{ env.PROJECT }}-SNAPSHOT-*.msi
 
       - name: Submit Code coverage
         if: inputs.codecov-enabled
         uses: codecov/codecov-action@v3
         with:
           flags: ${{ matrix.os }}, JDK ${{ matrix.java }}
-          file: build/reports/jacoco/test/jacocoTestReport.xml
+          file: ${{ inputs.working-directory }}/build/reports/jacoco/test/jacocoTestReport.xml
 
       - name: Upload Test Results to GitHub Build Artifacts
         if: ${{ always() }}
         uses: actions/upload-artifact@v3
         with:
           name: test-results windows
-          path: build/reports/tests/test
+          path: ${{ inputs.working-directory }}/build/reports/tests/test
 
       - name: Upload Binaries
         uses: actions/upload-artifact@v3
