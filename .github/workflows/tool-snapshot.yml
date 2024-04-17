@@ -266,6 +266,7 @@ jobs:
               --certfile "codesign-chain.pem" \
               --tsmode RFC3161 \
               --tsaurl http://timestamp.globalsign.com/tsa/r6advanced1 \
+              --name "Installer for ${{ env.PROJECT }}" \
               build/jpackage/${{ env.PROJECT_ESCAPED }}-SNAPSHOT-*.msi
 
       - name: Submit Code coverage
