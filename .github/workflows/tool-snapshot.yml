@@ -135,7 +135,7 @@ jobs:
       - name: Upload Binaries
         uses: actions/upload-artifact@v4
         with:
-          name: binaries
+          name: binaries-linux
           path: ${{ inputs.working-directory }}/build/distributions/${{ env.PROJECT }}-*.*
 
   macos-build:
@@ -195,7 +195,7 @@ jobs:
       - name: Upload Binaries
         uses: actions/upload-artifact@v4
         with:
-          name: binaries
+          name: binaries-macos
           path: ${{ inputs.working-directory }}/build/jpackage/${{ env.PROJECT }}-*.dmg
 
   windows-build:
@@ -281,7 +281,7 @@ jobs:
       - name: Upload Binaries
         uses: actions/upload-artifact@v4
         with:
-          name: binaries
+          name: binaries-windows
           path: ${{ inputs.working-directory }}/build/jpackage/${{ env.PROJECT }}-*.msi
 
   docker-build:
@@ -360,7 +360,6 @@ jobs:
       - name: Download all workflow run artifacts
         uses: actions/download-artifact@v4
         with:
-          name: binaries
           path: binaries
       - name: Display structure of downloaded files
         run: ls -R
