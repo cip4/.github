@@ -113,7 +113,7 @@ jobs:
         run: mv build/distributions/${{ env.PROJECT_ESCAPED }}-*.tar "build/distributions/${{ env.PROJECT }}-${GITHUB_REF/refs\/tags\//}.tar" || true
 
       - name: Upload Binaries
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: binaries
           path: ${{ inputs.working-directory }}/build/distributions/${{ env.PROJECT }}-*.*
@@ -182,7 +182,7 @@ jobs:
           mv ./build/jpackage/${{ env.PROJECT_ESCAPED }}-*.dmg "build/jpackage/${{ env.PROJECT }}-${GITHUB_REF/refs\/tags\//}.dmg"
 
       - name: Upload Binaries
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: binaries
           path: ${{ inputs.working-directory }}/build/jpackage/${{ env.PROJECT }}-*.dmg
@@ -252,7 +252,7 @@ jobs:
               build/jpackage/${{ env.PROJECT_ESCAPED }}-*.msi
 
       - name: Upload Binaries
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: binaries
           path: ${{ inputs.working-directory }}/build/jpackage/${{ env.PROJECT }}-*.msi

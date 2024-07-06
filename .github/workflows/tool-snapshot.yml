@@ -133,7 +133,7 @@ jobs:
           file: build/reports/jacoco/test/jacocoTestReport.xml
 
       - name: Upload Binaries
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: binaries
           path: ${{ inputs.working-directory }}/build/distributions/${{ env.PROJECT }}-*.*
@@ -193,7 +193,7 @@ jobs:
           mv ./build/jpackage/${{ env.PROJECT_ESCAPED }}-*.dmg "build/jpackage/${{ env.PROJECT }}-SNAPSHOT-${{ github.run_number }}.dmg"
 
       - name: Upload Binaries
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: binaries
           path: ${{ inputs.working-directory }}/build/jpackage/${{ env.PROJECT }}-*.dmg
@@ -273,13 +273,13 @@ jobs:
 
       - name: Upload Test Results to GitHub Build Artifacts
         if: ${{ always() }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: test-results windows
           path: ${{ inputs.working-directory }}/build/reports/tests/test
 
       - name: Upload Binaries
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: binaries
           path: ${{ inputs.working-directory }}/build/jpackage/${{ env.PROJECT }}-*.msi
