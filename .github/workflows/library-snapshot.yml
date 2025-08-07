@@ -116,6 +116,16 @@ jobs:
               -PossrhPassword=$OSSRH_PASSWORD \
               -PprojectVersion=${{ env.VERSION }} \
               --no-daemon
+      - name: Ensuring Deployment Visibility In The Central Publisher Portal
+      # https://central.sonatype.org/publish/publish-portal-ossrh-staging-api/#ensuring-deployment-visibility-in-the-central-publisher-portal
+        run: |
+          # Make HTTP POST request with no body - curl will exit with non-zero code on failure
+          curl -X POST \
+            -u "$OSSRH_USERNAME:$OSSRH_PASSWORD" \
+            "https://ossrh-staging-api.central.sonatype.com/manual/upload/defaultRepository/org.cip4"
+        env:
+          OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+          OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
 
   windows-test:
     runs-on: windows-latest
