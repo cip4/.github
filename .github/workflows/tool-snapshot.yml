@@ -335,11 +335,11 @@ jobs:
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
 
-      - name: Docker Auth GCloud
-        run: gcloud auth configure-docker
+      - name: Docker Auth for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.ARTIFACT_REGISTRY_LOCATION }}-docker.pkg.dev
 
-      - name: Push Image to Google Container Registry
-        run: docker push "gcr.io/${{ secrets.GCP_PROJECT_ID }}/${SERVICE_NAME}:latest"
+      - name: Push Image to Google Artifact Registry
+        run: docker push "${{ env.ARTIFACT_REGISTRY_LOCATION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY_REPO }}/${SERVICE_NAME}:latest"
 
       - name: Deploy to Cloud Run
         run: |-
