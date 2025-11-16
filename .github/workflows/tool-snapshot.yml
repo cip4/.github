@@ -294,6 +294,8 @@ jobs:
       PROJECT_HANDLE: ${{ needs.extract-info.outputs.PROJECT_HANDLE }}
       SERVICE_NAME: ${{ needs.extract-info.outputs.PROJECT_HANDLE }}-cip4-org
       RUN_REGION: europe-west1
+      ARTIFACT_REGISTRY_LOCATION: europe-west1
+      ARTIFACT_REGISTRY_REPO: docker-images
     steps:
       - name: Check out sources...
         uses: actions/checkout@v4
@@ -302,7 +304,7 @@ jobs:
         run: |-
           docker build \
             -t cip4/${PROJECT_HANDLE}:latest \
-            -t "gcr.io/${{ secrets.GCP_PROJECT_ID }}/${SERVICE_NAME}:latest" \
+            -t "${{ env.ARTIFACT_REGISTRY_LOCATION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY_REPO }}/${SERVICE_NAME}:latest" \
             --build-arg VERSION=dev \
             --build-arg BUILD_NUMBER=${GITHUB_RUN_NUMBER} \
             --build-arg GIT_REV=${GITHUB_SHA} \
@@ -343,7 +345,7 @@ jobs:
         run: |-
           gcloud run deploy "${SERVICE_NAME}" \
             --region "${RUN_REGION}" \
-            --image "gcr.io/${{ secrets.GCP_PROJECT_ID }}/${SERVICE_NAME}:latest" \
+            --image "${{ env.ARTIFACT_REGISTRY_LOCATION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY_REPO }}/${SERVICE_NAME}:latest" \
             --platform "managed" \
             --allow-unauthenticated
 
