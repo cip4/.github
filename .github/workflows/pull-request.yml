@@ -37,6 +37,9 @@ jobs:
           java-version: ${{ inputs.java-version }}
           cache: 'gradle'
 
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v5
+
       - uses: haya14busa/action-cond@v1
         id: jacoco
         with:
