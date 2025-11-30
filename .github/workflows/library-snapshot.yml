@@ -212,19 +212,6 @@ jobs:
             --build-arg GIT_REV=${GITHUB_SHA} \
             .
 
-      - name: Login to Docker Hub
-        run: docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} -p ${{ secrets.DOCKER_HUB_PASSWORD }}
-
-      - name: Push docker container to Docker Hub
-        run: docker push cip4/${{ env.PROJECT_HANDLE }}:latest
-
-      - name: Push README to Docker Hub
-        uses: peter-evans/dockerhub-description@v4
-        with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_PASSWORD }}
-          repository: cip4/${{ env.PROJECT_HANDLE }}
-
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
