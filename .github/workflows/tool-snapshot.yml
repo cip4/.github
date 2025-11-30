@@ -5,11 +5,11 @@ on:
     inputs:
       confluence-label:
         description: Label to attach to the binaries uplaoded to confluence.
-        required: true
+        required: false
         type: string
       confluence-content-id:
         description: ID of the confluence page to attach the snapshot to.
-        required: true
+        required: false
         type: number
       apple-bundle-id:
         description: BundleID to use when notarizing the MacOS build.
@@ -367,6 +367,7 @@ jobs:
       - linux-build
       - macos-build
       - windows-build
+    if: inputs.confluence-content-id
     env:
       PROJECT: ${{ needs.extract-info.outputs.PROJECT }}
     steps:
