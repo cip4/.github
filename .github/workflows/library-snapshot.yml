@@ -52,9 +52,18 @@ jobs:
         id: extract-info
         run: |
           VERSION=$( git describe --tags --abbrev=0 | sed  "s/^v\?\(.*\)\.[[:digit:]]\+$/\\1.x-SNAPSHOT/")
+          PROJECT=$(cat settings.gradle | grep -o -P "(?<=rootProject.name = ').*(?=')")
+          PROJECT_ESCAPED=$(printf %q "$PROJECT")
+          PROJECT_HANDLE=$(echo "$PROJECT" | sed "s/CIP4 //" | tr '[:upper:]' '[:lower:]')
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "PROJECT=$PROJECT" >> $GITHUB_OUTPUT
+          echo "PROJECT_ESCAPED=$PROJECT_ESCAPED" >> $GITHUB_OUTPUT
+          echo "PROJECT_HANDLE=$PROJECT_HANDLE" >> $GITHUB_OUTPUT
     outputs:
       VERSION: ${{ steps.extract-info.outputs.VERSION }}
+      PROJECT: ${{ steps.extract-info.outputs.PROJECT }}
+      PROJECT_ESCAPED: ${{ steps.extract-info.outputs.PROJECT_ESCAPED }}
+      PROJECT_HANDLE: ${{ steps.extract-info.outputs.PROJECT_HANDLE }}
 
   linux-build-publish:
     runs-on: ubuntu-latest
