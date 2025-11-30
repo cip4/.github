@@ -22,6 +22,11 @@ on:
         required: false
         type: boolean
         default: false
+      docker-build:
+        description: Flag if docker image should be build and published
+        required: false
+        type: boolean
+        default: false
     secrets:
       SIGNING_KEY:
         required: true
@@ -171,3 +176,68 @@ jobs:
         with:
           name: test-results windows
           path: build/reports/tests/test
+
+  docker-build:
+    runs-on: ubuntu-latest
+    if: ${{ inputs.docker-build }}
+    needs:
+      - extract-info
+    env:
+      PROJECT: ${{ needs.extract-info.outputs.PROJECT }}
+      PROJECT_HANDLE: ${{ needs.extract-info.outputs.PROJECT_HANDLE }}
+      SERVICE_NAME: ${{ needs.extract-info.outputs.PROJECT_HANDLE }}-cip4-org
+      RUN_REGION: europe-west1
+      ARTIFACT_REGISTRY_LOCATION: europe-west1
+      ARTIFACT_REGISTRY_REPO: docker-images
+    steps:
+      - name: Check out sources...
+        uses: actions/checkout@v4
+
+      - name: Build docker container
+        run: |-
+          docker build \
+            -t cip4/${PROJECT_HANDLE}:latest \
+            -t "${{ env.ARTIFACT_REGISTRY_LOCATION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY_REPO }}/${SERVICE_NAME}:latest" \
+            --build-arg VERSION=dev \
+            --build-arg BUILD_NUMBER=${GITHUB_RUN_NUMBER} \
+            --build-arg GIT_REV=${GITHUB_SHA} \
+            .
+
+      - name: Login to Docker Hub
+        run: docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} -p ${{ secrets.DOCKER_HUB_PASSWORD }}
+
+      - name: Push README to Docker Hub
+        uses: peter-evans/dockerhub-description@v4
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+          repository: cip4/${{ env.PROJECT_HANDLE }}
+
+      - name: Push docker container to Docker Hub
+        run: docker push cip4/${{ env.PROJECT_HANDLE }}:latest
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: '${{ secrets.GCP_SA_KEY }}'
+          token_format: access_token
+          service_account: github@cip4-net.iam.gserviceaccount.com
+
+      - name: Setup GCloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Docker Auth for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.ARTIFACT_REGISTRY_LOCATION }}-docker.pkg.dev
+
+      - name: Push Image to Google Artifact Registry
+        run: docker push "${{ env.ARTIFACT_REGISTRY_LOCATION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY_REPO }}/${SERVICE_NAME}:latest"
+
+      - name: Deploy to Cloud Run
+        run: |-
+          gcloud run deploy "${SERVICE_NAME}" \
+            --region "${RUN_REGION}" \
+            --image "${{ env.ARTIFACT_REGISTRY_LOCATION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY_REPO }}/${SERVICE_NAME}:latest" \
+            --platform "managed" \
+            --allow-unauthenticated
