@@ -368,7 +368,7 @@ jobs:
       - linux-build
       # - macos-build
       - windows-build
-    if: inputs.confluence-content-id
+    if: false && inputs.confluence-content-id  # currently broken
     env:
       PROJECT: ${{ needs.extract-info.outputs.PROJECT }}
     steps:
