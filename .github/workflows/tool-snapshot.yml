@@ -141,6 +141,7 @@ jobs:
           path: ${{ inputs.working-directory }}/build/distributions/${{ env.PROJECT }}-*.*
 
   macos-build:
+   if false: # disable until notarization no longer fails
     runs-on: macos-latest
     needs:
       - extract-info
