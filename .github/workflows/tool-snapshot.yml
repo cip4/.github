@@ -141,8 +141,8 @@ jobs:
           path: ${{ inputs.working-directory }}/build/distributions/${{ env.PROJECT }}-*.*
 
   macos-build:
-   if: false # disable until notarization no longer fails
     runs-on: macos-latest
+    if: false # macOS build disabled
     needs:
       - extract-info
     env:
@@ -366,7 +366,7 @@ jobs:
     needs:
       - extract-info
       - linux-build
-      - macos-build
+      # - macos-build
       - windows-build
     if: inputs.confluence-content-id
     env:
