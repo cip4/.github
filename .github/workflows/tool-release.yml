@@ -132,6 +132,7 @@ jobs:
 
   macos-build:
     runs-on: macos-latest
+    if: false # macOS build disabled
     needs:
       - extract-info
     env:
@@ -309,10 +310,11 @@ jobs:
 
   publish:
     runs-on: ubuntu-latest
+    if: false # publish disabled
     needs:
       - extract-info
       - linux-build
-      - macos-build
+      # - macos-build
       - windows-build
     env:
       PROJECT: ${{ needs.extract-info.outputs.PROJECT }}
